@@ -1,0 +1,592 @@
+@font-face {
+  font-family: 'Talweeh Epilogue';
+  src: url('https://talweehacademy.com/wp-content/uploads/2024/08/Epilogue-Regular.woff2') format('woff2');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Talweeh Epilogue';
+  src: url('https://talweehacademy.com/wp-content/uploads/2024/08/Epilogue-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: 'Talweeh Cinzel';
+  src: url('https://talweehacademy.com/wp-content/uploads/2024/08/Cinzel-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+}
+
+:root {
+  --green: #3a5a40;
+  --green-dark: #243f2b;
+  --green-soft: #eef7ef;
+  --gold: #e09f3e;
+  --red: #9e2a2b;
+  --ink: #26352b;
+  --muted: #6a7275;
+  --pattern: url('https://talweehacademy.com/wp-content/uploads/2024/08/background4.webp');
+}
+
+#root {
+  width: 100%;
+}
+
+.page-shell {
+  min-height: 100vh;
+  color: var(--ink);
+  background-color: #fbfdfa;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.86)), var(--pattern);
+  background-size: auto, 520px;
+  font-family: 'Talweeh Epilogue', Georgia, serif;
+}
+
+.page-shell::before {
+  content: '';
+  display: block;
+  height: 8px;
+  background: #3b4445;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), var(--pattern);
+  background-size: auto, 420px;
+  box-shadow: 0 10px 24px rgba(39, 61, 43, 0.08);
+}
+
+.promo-bar {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 54px;
+  padding: 0 56px;
+  background: var(--red);
+  color: #fff7f2;
+  letter-spacing: 0.8px;
+  text-align: center;
+}
+
+.promo-bar a {
+  margin-left: 6px;
+  border-bottom: 1px solid currentColor;
+  font-weight: 600;
+}
+
+.promo-bar button {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: #f5dada;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.main-nav {
+  display: grid;
+  grid-template-columns: minmax(220px, 310px) 1fr auto;
+  align-items: center;
+  gap: 30px;
+  max-width: 1324px;
+  min-height: 108px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+}
+
+.brand img {
+  width: min(306px, 100%);
+  height: auto;
+}
+
+.nav-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 34px;
+  color: #314f38;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.nav-links a {
+  transition: color 180ms ease;
+}
+
+.nav-links a:hover {
+  color: var(--gold);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.cart-button,
+.journey-button {
+  border: 0;
+  background: var(--green);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.cart-button {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 24px;
+}
+
+.journey-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 16px;
+  padding: 17px 31px;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.hero {
+  display: grid;
+  min-height: 280px;
+  place-items: center;
+  background-image:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.86) 47%, rgba(0, 0, 0, 0.78)),
+    url('https://talweehacademy.com/wp-content/uploads/2024/12/email-1024x340.webp');
+  background-position: center;
+  background-size: cover;
+  color: #fff;
+  text-align: center;
+}
+
+.hero-overlay {
+  transform: translateY(5px);
+}
+
+.hero h1 {
+  margin: 0;
+  font-family: 'Talweeh Cinzel', Georgia, serif;
+  font-size: clamp(2.1rem, 3vw, 3rem);
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.hero-divider {
+  width: 210px;
+  height: 32px;
+  margin: 22px auto 9px;
+  filter: brightness(0) invert(1);
+  object-fit: contain;
+}
+
+.hero p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 18px;
+}
+
+.courses-section {
+  max-width: 1324px;
+  margin: 0 auto;
+  padding: 56px 28px 36px;
+}
+
+.category-panel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px 20px;
+  margin: 0 auto 24px;
+  padding: 16px 22px 14px;
+  border: 2px solid var(--gold);
+  border-radius: 12px;
+  background: rgba(240, 250, 241, 0.72);
+}
+
+.category-panel button {
+  border: 0;
+  border-radius: 0;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.36);
+  color: #69727d;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 180ms ease, background 180ms ease;
+}
+
+.category-panel button.active,
+.category-panel button:hover {
+  color: #18231d;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 30px 22px;
+}
+
+.course-card {
+  min-width: 0;
+}
+
+.course-art {
+  position: relative;
+  aspect-ratio: 0.86;
+  overflow: hidden;
+  border-radius: 44% 44% 0 0 / 24% 24% 0 0;
+  background: #eef2e7;
+  box-shadow: 0 12px 30px rgba(42, 58, 47, 0.12);
+}
+
+.course-art > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.instructor-strip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 62px;
+  padding: 10px 20px;
+  border-radius: 999px 999px 0 0;
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 -8px 18px rgba(30, 48, 34, 0.24);
+}
+
+.instructor-strip img {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  border: 4px solid rgba(255, 255, 255, 0.75);
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.instructor-strip strong,
+.instructor-strip span {
+  display: block;
+  line-height: 1.18;
+}
+
+.instructor-strip strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.instructor-strip span {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.course-body {
+  padding: 20px 12px 0;
+}
+
+.course-body h2 {
+  min-height: 64px;
+  margin: 0 0 12px;
+  color: #202821;
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.price-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px;
+  color: var(--green);
+  font-size: 15px;
+}
+
+.price-line strong {
+  font-size: 19px;
+}
+
+.price-line em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.course-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: var(--green);
+  color: #fff;
+  font-size: 14px;
+}
+
+.course-footer span {
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.gift-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 2px solid var(--gold);
+  border-bottom: 2px solid var(--gold);
+  background: rgba(232, 245, 234, 0.72);
+}
+
+.gift-card {
+  display: flex;
+  min-height: 320px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 46px 8vw;
+  text-align: center;
+}
+
+.gift-card + .gift-card {
+  border-left: 1px solid var(--green);
+}
+
+.gift-card h3 {
+  margin: 0;
+  color: var(--green);
+  font-family: 'Talweeh Cinzel', Georgia, serif;
+  font-size: 25px;
+  letter-spacing: 1px;
+  text-transform: capitalize;
+}
+
+.gift-card img {
+  width: 170px;
+  height: 44px;
+  margin: 26px 0 18px;
+  object-fit: contain;
+}
+
+.gift-card p {
+  max-width: 560px;
+  margin: 0 0 26px;
+  color: #2c3630;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.red-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 170px;
+  justify-content: center;
+  border-radius: 14px;
+  padding: 13px 24px;
+  background: var(--red);
+  color: #fff;
+  font-size: 16px;
+}
+
+.site-footer {
+  min-height: 492px;
+  background-image: linear-gradient(rgba(241, 250, 242, 0.92), rgba(241, 250, 242, 0.92)), var(--pattern);
+  background-size: auto, 520px;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 210px repeat(4, minmax(150px, 1fr));
+  gap: 34px;
+  max-width: 1324px;
+  margin: 0 auto;
+  padding: 92px 28px 52px;
+}
+
+.footer-seal {
+  align-self: start;
+  width: 174px;
+  margin-top: 3px;
+}
+
+.footer-column {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.footer-column h4 {
+  margin: 0 0 10px;
+  color: var(--red);
+  font-family: 'Talweeh Cinzel', Georgia, serif;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: 1.5px;
+}
+
+.footer-column a {
+  color: #2f3c35;
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.social-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: var(--red);
+}
+
+.social-links a {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1324px;
+  margin: 0 auto;
+  padding: 0 28px 30px;
+  color: var(--red);
+  font-size: 14px;
+}
+
+.footer-bottom button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  background: var(--green);
+  color: #fff;
+  cursor: pointer;
+}
+
+@media (max-width: 1100px) {
+  .main-nav {
+    grid-template-columns: 220px 1fr;
+  }
+
+  .nav-actions {
+    display: none;
+  }
+
+  .nav-links {
+    justify-content: flex-end;
+    gap: 18px;
+  }
+
+  .course-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .footer-content {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .promo-bar {
+    min-height: 46px;
+    font-size: 13px;
+  }
+
+  .main-nav {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .brand {
+    justify-content: center;
+  }
+
+  .brand img {
+    width: 240px;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 18px;
+    font-size: 15px;
+  }
+
+  .hero {
+    min-height: 230px;
+  }
+
+  .courses-section {
+    padding: 34px 16px 26px;
+  }
+
+  .category-panel {
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .category-panel button {
+    font-size: 14px;
+  }
+
+  .course-grid,
+  .gift-section,
+  .footer-content {
+    grid-template-columns: 1fr;
+  }
+
+  .course-art {
+    max-height: 520px;
+  }
+
+  .gift-card + .gift-card {
+    border-top: 1px solid var(--green);
+    border-left: 0;
+  }
+
+  .gift-card {
+    min-height: 260px;
+    padding: 36px 24px;
+  }
+
+  .footer-content {
+    padding-top: 54px;
+  }
+
+  .footer-seal {
+    width: 150px;
+  }
+}
