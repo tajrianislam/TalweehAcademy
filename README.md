@@ -1,6 +1,6 @@
 # Talweeh Academy Landing Page
 
-React + Vite landing page styled after the Talweeh Academy courses page.
+React + Vite 
 
 ## Run Locally
 
