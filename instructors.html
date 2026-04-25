@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Instructors - Talweeh Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .instructors-intro {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 40px 40px;
+      text-align: center;
+    }
+    .instructors-intro h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.6rem; font-weight: 700;
+      color: var(--forest);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+    .instructors-intro p {
+      color: var(--text-mid);
+      font-size: 1.03rem;
+      line-height: 1.85;
+      margin-bottom: 16px;
+    }
+
+    /* Instructor cards grid */
+    .instructors-grid-wrap { padding: 0 40px 70px; }
+    .instructors-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 28px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .instructor-card {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 3px 16px rgba(0,0,0,0.09);
+      text-align: center;
+      transition: transform .2s, box-shadow .2s;
+      border-bottom: 3px solid var(--gold);
+    }
+    .instructor-card:hover { transform: translateY(-5px); box-shadow: 0 10px 28px rgba(0,0,0,0.14); }
+    .instructor-photo {
+      height: 200px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1a3a0f, #2D5A1B);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .instructor-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+    .instructor-initials {
+      font-family: 'Cinzel', serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.35);
+    }
+    .instructor-card-body { padding: 22px 18px 20px; }
+    .instructor-card-name {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem; font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 14px;
+      line-height: 1.35;
+    }
+    .btn-read-bio {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--forest); color: #fff;
+      border: none; border-radius: 30px;
+      padding: 9px 22px;
+      font-family: 'Cinzel', serif; font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.05em; cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-read-bio:hover { background: var(--forest-dark); }
+
+    /* Bio modal */
+    .bio-modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 9999;
+      align-items: center; justify-content: center;
+    }
+    .bio-modal-overlay.open { display: flex; }
+    .bio-modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 40px 42px;
+      max-width: 600px;
+      width: 90%;
+      position: relative;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .bio-modal h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem; font-weight: 700;
+      color: var(--forest);
+      margin-bottom: 6px;
+    }
+    .bio-modal .bio-school { color: var(--gold); font-size: 0.88rem; font-weight: 600; margin-bottom: 18px; }
+    .bio-modal p { color: var(--text-mid); line-height: 1.8; font-size: 1rem; margin-bottom: 12px; }
+    .bio-close {
+      position: absolute; top: 14px; right: 18px;
+      background: none; border: none; font-size: 1.4rem;
+      cursor: pointer; color: #888;
+    }
+    .bio-close:hover { color: var(--crimson); }
+
+    @media (max-width: 900px) { .instructors-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 560px) { .instructors-grid { grid-template-columns: 1fr; } .instructors-grid-wrap { padding: 0 20px 50px; } }
+  </style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<div class="page-banner" style="background-image:url('https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=1600&q=80')">
+  <div class="page-banner-content">
+    <h1>Instructors</h1>
+    <div class="page-banner-ornament"><span>&#10070;&nbsp;&#10022;&nbsp;&#10070;</span></div>
+    <p class="page-banner-breadcrumb"><a href="index.html">Home</a> | Instructors</p>
+  </div>
+</div>
+
+<!-- INTRO -->
+<div class="instructors-intro">
+  <h2>Get to know your instructors</h2>
+  <div class="ornament"><span class="ornament-inner">&#10070;&nbsp;&#10022;&nbsp;&#10070;</span></div>
+  <br/>
+  <p>Talweeh Academy stands as a beacon of knowledge, uniquely combining traditional wisdom with modern academic excellence. Our esteemed instructors possess a rich tapestry of experience, having earned Ijāzāt from respected traditional scholars while also holding degrees from prestigious universities worldwide. This dual foundation equips them to impart knowledge with depth and nuance.</p>
+  <p>We take particular pride in our educators who have graduated from the blessed city of the Messenger, peace be upon him. Their firsthand experience in this sacred environment enriches their teachings and offers students a profound connection to both heritage and scholarship. At Talweeh Academy, we are dedicated to nurturing a vibrant learning community that honors tradition while embracing contemporary understanding, fostering a holistic educational experience for all.</p>
+</div>
+
+<!-- OUR INSTRUCTORS -->
+<div class="instructors-grid-wrap">
+  <div class="section-header" style="margin-bottom:36px;">
+    <h2 style="font-family:'Cinzel',serif;font-size:1.6rem;font-weight:700;color:var(--forest);text-transform:uppercase;letter-spacing:0.08em;">Our Instructors</h2>
+    <div class="ornament"><span class="ornament-inner">&#10070;&nbsp;&#10022;&nbsp;&#10070;</span></div>
+  </div>
+
+  <div class="instructors-grid">
+    <!-- Sheikh Omer Khurshid -->
+    <div class="instructor-card">
+      <div class="instructor-photo">
+        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80" alt="Sheikh Omer Khurshid" />
+      </div>
+      <div class="instructor-card-body">
+        <div class="instructor-card-name">Sheikh Omer Khurshid</div>
+        <button class="btn-read-bio" onclick="openBio('omer')"><i class="fa-solid fa-book-open"></i> Read Bio</button>
+      </div>
+    </div>
+
+    <!-- Sheikh Hamza Aktas -->
+    <div class="instructor-card">
+      <div class="instructor-photo">
+        <div class="instructor-initials">HA</div>
+      </div>
+      <div class="instructor-card-body">
+        <div class="instructor-card-name">Sheikh Hamza Aktas</div>
+        <button class="btn-read-bio" onclick="openBio('hamza')"><i class="fa-solid fa-book-open"></i> Read Bio</button>
+      </div>
+    </div>
+
+    <!-- Mufti Mohammad Daud Khurshid -->
+    <div class="instructor-card">
+      <div class="instructor-photo">
+        <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&q=80" alt="Mufti Mohammad Daud" />
+      </div>
+      <div class="instructor-card-body">
+        <div class="instructor-card-name">Mufti Mohammad Daud Khurshid</div>
+        <button class="btn-read-bio" onclick="openBio('daud')"><i class="fa-solid fa-book-open"></i> Read Bio</button>
+      </div>
+    </div>
+
+    <!-- Shaykh Farhan Ingar -->
+    <div class="instructor-card">
+      <div class="instructor-photo">
+        <div class="instructor-initials">FI</div>
+      </div>
+      <div class="instructor-card-body">
+        <div class="instructor-card-name">Shaykh Farhan Ingar</div>
+        <button class="btn-read-bio" onclick="openBio('farhan')"><i class="fa-solid fa-book-open"></i> Read Bio</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BIO MODALS -->
+<div class="bio-modal-overlay" id="bio-modal" onclick="if(event.target===this)closeBio()">
+  <div class="bio-modal">
+    <button class="bio-close" onclick="closeBio()">&#x2715;</button>
+    <h3 id="bio-name"></h3>
+    <div class="bio-school" id="bio-school"></div>
+    <div id="bio-text"></div>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+<script>
+  window.PAGE_TITLE = 'Instructors';
+  window.PAGE_ACTIVE_NAV = 'instructors';
+</script>
+<script src="shared.js"></script>
+<script>
+  const bios = {
+    omer: {
+      name: 'Sheikh Omer Khurshid',
+      school: 'Islamic University Medina',
+      text: `<p>Sheikh Omer Khurshid completed his studies at the Islamic University of Madinah, where he graduated with a degree in Sharīʿah. He holds multiple ijāzāt in various Islamic sciences and has dedicated himself to teaching students across the world.</p>
+             <p>He specializes in Uṣūl al-Fiqh, Uṣūl al-Ḥadīth, Fiqh, Tafsīr, and Arabic language sciences. His teaching method integrates both traditional and contemporary academic approaches, making complex topics accessible to students at every level.</p>`
+    },
+    hamza: {
+      name: 'Sheikh Hamza Aktas',
+      school: 'IKAN University',
+      text: `<p>Sheikh Hamza Aktas is a scholar with extensive training in Islamic jurisprudence. He has studied under senior scholars and holds authorizations in Fiqh and related sciences.</p>
+             <p>He brings a rigorous and research-based approach to the classroom, helping students engage deeply with classical legal texts.</p>`
+    },
+    daud: {
+      name: 'Mufti Mohammad Daud Khurshid',
+      school: 'Islamic University Medina',
+      text: `<p>Mufti Mohammad Daud Khurshid is a graduate of the Islamic University of Madinah and holds a degree in Arabic Language and Literature alongside formal training in Islamic jurisprudence.</p>
+             <p>He specializes in Arabic grammar, morphology, rhetoric, and Fiqh. His practical, application-based approach to teaching Arabic has helped countless students unlock the classical texts of Islam.</p>`
+    },
+    farhan: {
+      name: 'Shaykh Farhan Ingar',
+      school: 'Talweeh Academy',
+      text: `<p>Shaykh Farhan Ingar is a specialist in Tajwīd and Quranic recitation, with formal training and authorizations in the recitation sciences.</p>
+             <p>He teaches Tajwīd at Talweeh Academy and is known for his precise and patient instruction style, guiding students toward correct and beautiful recitation of the Quran.</p>`
+    }
+  };
+
+  function openBio(key) {
+    const bio = bios[key];
+    document.getElementById('bio-name').textContent = bio.name;
+    document.getElementById('bio-school').textContent = bio.school;
+    document.getElementById('bio-text').innerHTML = bio.text;
+    document.getElementById('bio-modal').classList.add('open');
+  }
+  function closeBio() {
+    document.getElementById('bio-modal').classList.remove('open');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Articles - Talweeh Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .articles-page-wrap { max-width: 900px; margin: 0 auto; padding: 50px 30px 70px; }
+
+    /* Filter bar */
+    .articles-filter {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+    .afilter-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem; font-weight: 600;
+      color: var(--forest);
+      margin-right: 6px;
+      align-self: center;
+    }
+    .afilter-btn {
+      background: none; border: 1.5px solid #ddd;
+      border-radius: 30px; padding: 6px 18px;
+      font-family: 'EB Garamond', serif;
+      font-size: 0.95rem; color: var(--text-mid);
+      cursor: pointer; transition: all .2s;
+    }
+    .afilter-btn:hover { border-color: var(--crimson); color: var(--crimson); }
+    .afilter-btn.active { background: var(--crimson); border-color: var(--crimson); color: #fff; }
+
+    /* Articles list */
+    .articles-page-list { display: flex; flex-direction: column; gap: 26px; }
+    .article-page-card {
+      display: flex; gap: 0;
+      border: 1.5px solid var(--gold);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      transition: box-shadow .2s;
+    }
+    .article-page-card:hover { box-shadow: 0 8px 24px rgba(198,150,10,0.15); }
+    .art-thumb {
+      width: 220px; flex-shrink: 0;
+      background: linear-gradient(135deg, #2D5A1B, #1a3a0f);
+      overflow: hidden; min-height: 180px;
+    }
+    .art-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .art-body { padding: 26px 26px 22px; display: flex; flex-direction: column; justify-content: center; flex: 1; }
+    .art-cat {
+      display: inline-block;
+      font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--gold); margin-bottom: 8px;
+    }
+    .art-meta { display: flex; gap: 16px; color: #888; font-size: 0.83rem; margin-bottom: 10px; }
+    .art-meta span { display: flex; align-items: center; gap: 5px; }
+    .art-meta i { color: var(--crimson); }
+    .art-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem; font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 10px; line-height: 1.4;
+    }
+    .art-excerpt { color: var(--text-mid); font-size: 0.97rem; line-height: 1.7; margin-bottom: 14px; }
+    .art-read-more { color: var(--crimson); font-weight: 700; font-size: 0.9rem; }
+    .art-read-more:hover { text-decoration: underline; }
+
+    @media (max-width: 680px) { .article-page-card { flex-direction: column; } .art-thumb { width: 100%; height: 180px; } }
+  </style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<div class="page-banner" style="background-image:url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1600&q=80')">
+  <div class="page-banner-content">
+    <h1>Articles</h1>
+    <div class="page-banner-ornament"><span>&#10070;&nbsp;&#10022;&nbsp;&#10070;</span></div>
+    <p class="page-banner-breadcrumb"><a href="index.html">Home</a> | Articles</p>
+  </div>
+</div>
+
+<div class="articles-page-wrap">
+  <!-- Filter -->
+  <div class="articles-filter">
+    <span class="afilter-label">Filter Articles</span>
+    <button class="afilter-btn active" onclick="filterArticles('all',this)">All</button>
+    <button class="afilter-btn" onclick="filterArticles('finance',this)">Islamic Finance</button>
+    <button class="afilter-btn" onclick="filterArticles('scholars',this)">Scholars and Texts</button>
+    <button class="afilter-btn" onclick="filterArticles('uncategorized',this)">Uncategorized</button>
+  </div>
+
+  <!-- Articles -->
+  <div class="articles-page-list" id="articles-list">
+
+    <div class="article-page-card" data-cat="uncategorized scholars">
+      <div class="art-thumb">
+        <img src="https://images.unsplash.com/photo-1618945524163-32451704cbb8?w=500&q=80" alt="Tahsin Taqbih" />
+      </div>
+      <div class="art-body">
+        <span class="art-cat">Scholars and Texts</span>
+        <div class="art-meta">
+          <span><i class="fa-regular fa-calendar"></i> January 8, 2026</span>
+          <span><i class="fa-regular fa-clock"></i> 6 Minutes</span>
+        </div>
+        <h2 class="art-title">Taḥsīn &amp; Taqbīḥ: Reason, Revelation, and the Foundations of Islamic Morality</h2>
+        <a class="art-read-more" href="#">Read More.....</a>
+      </div>
+    </div>
+
+    <div class="article-page-card" data-cat="scholars">
+      <div class="art-thumb">
+        <img src="https://images.unsplash.com/photo-1594978583900-804eb09f893c?w=500&q=80" alt="Mukhtasar al-Quduri" />
+      </div>
+      <div class="art-body">
+        <span class="art-cat">Scholars and Texts</span>
+        <div class="art-meta">
+          <span><i class="fa-regular fa-calendar"></i> October 30, 2025</span>
+          <span><i class="fa-regular fa-clock"></i> 8 Minutes</span>
+        </div>
+        <h2 class="art-title">The Legacy of Mukhtasar al-Qudūrī</h2>
+        <p class="art-excerpt">In this section, we will cover the century-long legacy of the Mukhtaṣar, discovering the most famous works that stem from it.</p>
+        <a class="art-read-more" href="#">Read More.....</a>
+      </div>
+    </div>
+
+    <div class="article-page-card" data-cat="finance">
+      <div class="art-thumb">
+        <img src="https://images.unsplash.com/photo-1591696331111-ef9586a5b17a?w=500&q=80" alt="Islamic Finance" />
+      </div>
+      <div class="art-body">
+        <span class="art-cat">Islamic Finance</span>
+        <div class="art-meta">
+          <span><i class="fa-regular fa-calendar"></i> October 11, 2024</span>
+          <span><i class="fa-regular fa-clock"></i> 18 Minutes</span>
+        </div>
+        <h2 class="art-title">The Nature of Islamic Finance</h2>
+        <p class="art-excerpt">Islamic jurisprudence has demonstrated over the centuries its ability to adapt to any time or place, meet any challenge, and overcome any obstacle. This is because it is rooted within principles derived from the Qur'an</p>
+        <a class="art-read-more" href="#">Read More.....</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="site-footer"></div>
+<script>
+  window.PAGE_TITLE = 'Articles';
+  window.PAGE_ACTIVE_NAV = 'articles';
+</script>
+<script src="shared.js"></script>
+<script>
+  function filterArticles(cat, btn) {
+    document.querySelectorAll('.afilter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.article-page-card').forEach(card => {
+      if (cat === 'all') { card.style.display = ''; return; }
+      const cats = card.dataset.cat || '';
+      card.style.display = cats.split(' ').includes(cat) ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>

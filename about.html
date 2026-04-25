@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About Us - Talweeh Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Intro two-column */
+    .about-intro {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 460px;
+    }
+    .about-intro-text {
+      padding: 60px 50px;
+      background: #fff;
+    }
+    .about-intro-text h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem; font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 20px;
+    }
+    .about-intro-text p {
+      color: var(--text-mid);
+      font-size: 1.05rem;
+      line-height: 1.85;
+      margin-bottom: 16px;
+    }
+    .about-intro-text ol {
+      padding-left: 22px;
+      color: var(--text-mid);
+      font-size: 1.05rem;
+      line-height: 2;
+    }
+    .about-intro-text ol li strong { color: var(--forest); }
+    .about-intro-img {
+      overflow: hidden;
+      background: linear-gradient(135deg, #2D5A1B, #1a3a0f);
+    }
+    .about-intro-img img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Stats proud section */
+    .about-proud { padding: 60px 50px; background: var(--cream); }
+    .about-proud h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.6rem; font-weight: 700;
+      color: var(--forest);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .proud-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin-top: 40px;
+    }
+    .proud-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 32px 20px;
+      text-align: center;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+      border-top: 3px solid var(--gold);
+    }
+    .proud-card h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem; font-weight: 700;
+      color: var(--forest);
+      margin: 14px 0 10px;
+    }
+    .proud-card p { color: var(--text-mid); font-size: 0.92rem; line-height: 1.6; }
+    .proud-icon { font-size: 2.2rem; color: var(--crimson); }
+
+    /* Vision / Guidance / Invite sections */
+    .about-section-block { padding: 60px 50px; }
+    .about-section-block:nth-child(even) { background: var(--mint); }
+    .about-section-block h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4rem; font-weight: 700;
+      color: var(--forest);
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .about-section-block h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--text-dark);
+      margin: 20px 0 10px;
+    }
+    .about-section-block p {
+      color: var(--text-mid);
+      font-size: 1.02rem;
+      line-height: 1.85;
+      max-width: 820px;
+    }
+    .btn-terms {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--crimson); color: #fff;
+      border: none; border-radius: 30px;
+      padding: 11px 28px; margin-top: 20px;
+      font-family: 'Cinzel', serif; font-size: 0.88rem; font-weight: 600;
+      letter-spacing: 0.05em; cursor: pointer;
+      transition: background .2s; text-decoration: none;
+    }
+    .btn-terms:hover { background: var(--crimson-dark); }
+
+    @media (max-width: 900px) {
+      .about-intro { grid-template-columns: 1fr; }
+      .about-intro-img { height: 280px; }
+      .proud-grid { grid-template-columns: 1fr 1fr; }
+      .about-intro-text, .about-proud, .about-section-block { padding: 40px 24px; }
+    }
+    @media (max-width: 600px) { .proud-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<div class="page-banner" style="background-image:url('https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=1600&q=80')">
+  <div class="page-banner-content">
+    <h1>About Us</h1>
+    <div class="page-banner-ornament"><span>&#10070;&nbsp;&#10022;&nbsp;&#10070;</span></div>
+    <p class="page-banner-breadcrumb"><a href="index.html">Home</a> | About Us</p>
+  </div>
+</div>
+
+<!-- WHAT IS TALWEEH ACADEMY -->
+<div class="about-intro">
+  <div class="about-intro-text">
+    <h2>What is Talweeh Academy?</h2>
+    <p>Talweeh Academy is an institution dedicated to reviving Islamic academia in the West. Our mission is to help seekers of knowledge engage deeply with the rich legacy of Islamic scholarship. We achieve this by offering a carefully designed syllabus featuring robust, content-rich courses that delve into essential concepts within every Islamic science.</p>
+    <p>Our courses are taught by highly qualified instructors who have years of training and experience in their respective fields. These instructors bring thorough research and expertise, ensuring that each student receives an authentic and comprehensive education. Our comprehensive curriculum encompasses a wide range of subjects, including:</p>
+    <ol>
+      <li><strong>Naḥw</strong> (grammar)</li>
+      <li><strong>Ṣarf</strong> (morphology)</li>
+      <li><strong>Balāghah</strong> (rhetoric)</li>
+      <li><strong>Mantiq</strong> (logic)</li>
+      <li><strong>Tafsīr</strong> (exegesis)</li>
+      <li><strong>Uṣūl al-Ḥadīth</strong> (foundations of ḥadīth)</li>
+      <li><strong>Uṣūl al-Fiqh</strong> (foundations of jurisprudence)</li>
+      <li><strong>Fiqh</strong> (Islamic jurisprudence)</li>
+      <li>and Arabic for beginners.</li>
+    </ol>
+  </div>
+  <div class="about-intro-img">
+    <img src="https://images.unsplash.com/photo-1542816417-0983c9c9ad53?w=900&q=80" alt="Grand Mosque" />
+  </div>
+</div>
+
+<!-- THINGS THAT MAKE US PROUD -->
+<div class="about-proud">
+  <h2>Things that make us proud</h2>
+  <div class="ornament"><span class="ornament-inner">&#10070;&nbsp;&#10022;&nbsp;&#10070;</span></div>
+  <div class="proud-grid">
+    <div class="proud-card">
+      <div class="proud-icon"><i class="fa-solid fa-layer-group"></i></div>
+      <h3>Choose your learning level</h3>
+      <p>Programs structured for every level of Islamic knowledge</p>
+    </div>
+    <div class="proud-card">
+      <div class="proud-icon"><i class="fa-solid fa-chalkboard-user"></i></div>
+      <h3>Quality Teachers</h3>
+      <p>Selecting teachers of piety and moral character who are sincere and devout</p>
+    </div>
+    <div class="proud-card">
+      <div class="proud-icon"><i class="fa-solid fa-video"></i></div>
+      <h3>400+ Hours of Deliverables</h3>
+      <p>More than 400 hours of video lessons on demand.</p>
+    </div>
+    <div class="proud-card">
+      <div class="proud-icon"><i class="fa-solid fa-mosque"></i></div>
+      <h3>Talweeh Society</h3>
+      <p>Get access to our free courses and weekly lessons</p>
+    </div>
+  </div>
+</div>
+
+<!-- THE VISION -->
+<div class="about-section-block">
+  <h2>The Vision of Talweeh Academy</h2>
+  <div class="ornament" style="justify-content:flex-start;margin-bottom:20px;"><span class="ornament-inner">&#10070;&nbsp;&#10022;&nbsp;&#10070;</span></div>
+  <p>Our academy was established with a bold vision: elevating the academic excellence of Islamic scholarship across all disciplines. We strive to bridge existing gaps and provide students with a superior educational experience that meets their highest expectations, enabling them to access a higher level of Islamic academia and creating an environment where knowledge can flourish!</p>
+</div>
+
+<!-- QUALIFIED GUIDANCE -->
+<div class="about-section-block">
+  <h2>Qualified Guidance</h2>
+  <div class="ornament" style="justify-content:flex-start;margin-bottom:20px;"><span class="ornament-inner">&#10070;&nbsp;&#10022;&nbsp;&#10070;</span></div>
+  <h3>Instructors Holding Ijāzāt (traditional authorization)</h3>
+  <p>Under the guidance of qualified scholars and experts in their respective fields, we ensure that each course is delivered with clarity, depth, and relevance to both contemporary and classical knowledge. Our esteemed instructors have undertaken rigorous scholarly journeys, acquiring authorization from distinguished scholars across the globe, and securing certifications in multiple areas, including Quranic recitation, Hadith studies, and Islamic sciences.</p>
+</div>
+
+<!-- INVITATION TO JOIN -->
+<div class="about-section-block">
+  <h2>Invitation to Join Us</h2>
+  <div class="ornament" style="justify-content:flex-start;margin-bottom:20px;"><span class="ornament-inner">&#10070;&nbsp;&#10022;&nbsp;&#10070;</span></div>
+  <p>We warmly invite you to join us on this enriching journey of knowledge and growth. Together, we will raise the bar for Islamic education, benefiting individuals and communities alike. Through our collaborative efforts, we hope to cultivate a generation of informed, engaged, and empowered individuals who can contribute positively to society.</p>
+</div>
+
+<!-- TERMS -->
+<div class="about-section-block" style="padding-top:30px;padding-bottom:50px;">
+  <h2>Terms &amp; Conditions</h2>
+  <div class="ornament" style="justify-content:flex-start;margin-bottom:20px;"><span class="ornament-inner">&#10070;&nbsp;&#10022;&nbsp;&#10070;</span></div>
+  <a class="btn-terms" href="#"><i class="fa-solid fa-file-lines"></i> Read Now</a>
+</div>
+
+<div id="site-footer"></div>
+<script>
+  window.PAGE_TITLE = 'About Us';
+  window.PAGE_ACTIVE_NAV = 'about';
+</script>
+<script src="shared.js"></script>
+</body>
+</html>

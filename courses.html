@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Courses - Talweeh Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── FILTER TABS ── */
+    .filter-wrap {
+      border: 1.5px solid var(--gold);
+      border-radius: 8px;
+      padding: 22px 30px;
+      margin: 36px 50px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      justify-content: center;
+      background: #fff;
+    }
+    .filter-btn {
+      background: none; border: none; cursor: pointer;
+      font-family: 'EB Garamond', serif;
+      font-size: 0.97rem;
+      color: var(--text-mid);
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: color .2s, background .2s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      color: var(--crimson);
+      font-weight: 700;
+    }
+    .filter-btn.active { text-decoration: underline; }
+
+    /* ── COURSE GRID (2-col for this page) ── */
+    .courses-page-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      padding: 0 50px 60px;
+    }
+    .course-card-lg {
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 3px 16px rgba(0,0,0,0.09);
+      transition: transform .2s, box-shadow .2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .course-card-lg:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,0.14); }
+    .course-poster {
+      height: 260px;
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(135deg, #1a3a0f, #2D5A1B);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .course-poster img { width: 100%; height: 100%; object-fit: cover; }
+    .course-poster-badge {
+      position: absolute; top: 12px; right: 12px;
+      background: var(--forest); color: #fff;
+      font-family: 'Cinzel', serif; font-size: 0.72rem; font-weight: 600;
+      padding: 4px 12px; border-radius: 20px;
+    }
+    .course-poster-badge.free { background: var(--gold); }
+    .course-poster-badge.completed { background: #7a1a5a; }
+    .course-card-body {
+      padding: 20px 22px 16px;
+      flex: 1;
+      display: flex; flex-direction: column;
+    }
+    .course-card-instructor {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 12px;
+    }
+    .instr-avatar-lg {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: var(--forest);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 0.85rem; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .instr-info-lg .instr-name { font-weight: 700; color: var(--forest); font-size: 0.92rem; }
+    .instr-info-lg .instr-school { color: #888; font-size: 0.8rem; }
+    .course-card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 10px;
+      line-height: 1.45;
+      flex: 1;
+    }
+    .course-card-price { color: var(--crimson); font-weight: 700; font-size: 1.05rem; margin-bottom: 16px; }
+    .course-card-price s { color: #aaa; font-weight: 400; margin-right: 4px; }
+    .btn-view-lg {
+      width: 100%; background: var(--crimson); color: #fff;
+      border: none; border-radius: 6px; padding: 11px;
+      font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: 600;
+      letter-spacing: 0.04em; cursor: pointer; transition: background .2s;
+    }
+    .btn-view-lg:hover { background: var(--crimson-dark); }
+
+    @media (max-width: 900px) { .courses-page-grid { grid-template-columns: 1fr; padding: 0 20px 40px; } .filter-wrap { margin: 20px; } }
+  </style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<!-- PAGE BANNER -->
+<div class="page-banner" style="background-image:url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=1600&q=80')">
+  <div class="page-banner-content">
+    <h1>Courses</h1>
+    <div class="page-banner-ornament"><span>&#10070;&nbsp;&#10022;&nbsp;&#10070;</span></div>
+    <p class="page-banner-breadcrumb"><a href="index.html">Home</a> | Courses</p>
+  </div>
+</div>
+
+<!-- FILTER TABS -->
+<div class="filter-wrap">
+  <button class="filter-btn active" onclick="filterCourses('all',this)">All</button>
+  <button class="filter-btn" onclick="filterCourses('fiqh',this)">Fiqh (Islamic jurisprudence)</button>
+  <button class="filter-btn" onclick="filterCourses('aqidah',this)">'Aqīdah (Theology)</button>
+  <button class="filter-btn" onclick="filterCourses('adab',this)">Adab (Arabic Literature)</button>
+  <button class="filter-btn" onclick="filterCourses('hadith',this)">Ḥadīth</button>
+  <button class="filter-btn" onclick="filterCourses('nahw',this)">Naḥw (Arabic syntax)</button>
+  <button class="filter-btn" onclick="filterCourses('tafsir',this)">Tafsīr</button>
+  <button class="filter-btn" onclick="filterCourses('tajwid',this)">Tajwīd</button>
+  <button class="filter-btn" onclick="filterCourses('usulfiqh',this)">Uṣūl Al-Fiqh (Legal theory)</button>
+  <button class="filter-btn" onclick="filterCourses('usulhadith',this)">Uṣūl Al-Ḥadīth (Ḥadīth Nomenclature)</button>
+</div>
+
+<!-- COURSES GRID -->
+<div class="courses-page-grid" id="courses-grid">
+
+  <div class="course-card-lg" data-cat="hadith usulhadith">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?w=700&q=80" alt="Al-Athbat" />
+      <span class="course-poster-badge">Online</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">MD</div>
+        <div class="instr-info-lg"><div class="instr-name">M. Mohammad Daud</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Al-Athbāt wa al-Fahāris</div>
+      <div class="course-card-price">$50.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="fiqh usulfiqh">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=700&q=80" alt="Usul al-Shashi" />
+      <span class="course-poster-badge">Online</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">A Critical Study of Uṣūl al-Shāshī</div>
+      <div class="course-card-price"><s>$45.00</s> $30.00 / month for 12 months <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="hadith usulhadith">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=700&q=80" alt="Jarh wa Tadil" />
+      <span class="course-poster-badge">Online</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Al Jarḥ wa al-Taʿdīl (Criticism and Accreditation of Narrators)</div>
+      <div class="course-card-price"><s>$100.00</s> $75.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="hadith">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=700&q=80" alt="Monday Night Readings" />
+      <span class="course-poster-badge free">Online | Free</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">📚 Monday Night Readings</div>
+      <div class="course-card-price">$0.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="nahw">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1585351737354-204ffbbe584f?w=700&q=80" alt="Mutammimah" />
+      <span class="course-poster-badge completed">Completed</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">MD</div>
+        <div class="instr-info-lg"><div class="instr-name">M. Mohammad Daud</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Mutammimah al-Ājurrūmiyyah</div>
+      <div class="course-card-price"><s>$225.00</s> $150.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="tajwid">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=700&q=80" alt="Tajwid" />
+      <span class="course-poster-badge">3 Months</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">FI</div>
+        <div class="instr-info-lg"><div class="instr-name">Shaykh Farhan Ingar</div><div class="instr-school">Talweeh Academy</div></div>
+      </div>
+      <div class="course-card-title">Tajwīd Mastery Level 1</div>
+      <div class="course-card-price">$100.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="nahw adab">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=700&q=80" alt="Arabic Program" />
+      <span class="course-poster-badge">2 Year</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">DK</div>
+        <div class="instr-info-lg"><div class="instr-name">M. Mohammad Daud Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Arabic Program</div>
+      <div class="course-card-price">$99.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="hadith usulhadith">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?w=700&q=80" alt="Tadrib al-Rawi" />
+      <span class="course-poster-badge">Online</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Tadrīb al-Rāwī: An In-Depth Study of Al-Suyūṭī's Work</div>
+      <div class="course-card-price">$50.00 / month <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="hadith usulhadith">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=700&q=80" alt="Tadwin al-Sunnah" />
+      <span class="course-poster-badge completed">Completed</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Tadwīn al-Sunnah (Codification of the Sunnah)</div>
+      <div class="course-card-price"><s>$50.00</s> $40.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="hadith usulhadith">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=700&q=80" alt="Makat al-Sunnah" />
+      <span class="course-poster-badge completed">Completed</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Makānat al-Sunnah (Sunnah as a Legal Authority)</div>
+      <div class="course-card-price">$50.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="fiqh usulfiqh">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=700&q=80" alt="Hanafi Usul" />
+      <span class="course-poster-badge">from Dec 21</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Hanafi Uṣūl al-Fiqh (Level 01)</div>
+      <div class="course-card-price"><s>$100.00</s> $75.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="hadith usulhadith">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?w=700&q=80" alt="Takwin al-Isnad" />
+      <span class="course-poster-badge completed">Completed</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">DK</div>
+        <div class="instr-info-lg"><div class="instr-name">M. Mohammad Daud Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Takwīn al-Isnād</div>
+      <div class="course-card-price">$40.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="fiqh">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=700&q=80" alt="Mukhtasar Quduri" />
+      <span class="course-poster-badge">Online</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">HA</div>
+        <div class="instr-info-lg"><div class="instr-name">Shaikh Hamza Aktas</div><div class="instr-school">IKAN University</div></div>
+      </div>
+      <div class="course-card-title">Mukhtasar al-Qudūrī: Qism al-'Uqūbāt</div>
+      <div class="course-card-price">$50.00 / month <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="fiqh">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=700&q=80" alt="Mukhtasar Quduri Ibadat" />
+      <span class="course-poster-badge">Online</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">MD</div>
+        <div class="instr-info-lg"><div class="instr-name">M. Mohammad Daud</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Mukhtasar al-Qudūrī: Qism al-'Ibādāt</div>
+      <div class="course-card-price">$50.00 / month <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="fiqh">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=700&q=80" alt="Nur al-Idah" />
+      <span class="course-poster-badge completed">Completed</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Nūr al-Īḍāḥ (Part 02)</div>
+      <div class="course-card-price"><s>$200.00</s> $130.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="usulfiqh">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=700&q=80" alt="Musallam al-Thubut" />
+      <span class="course-poster-badge completed">Completed</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Musallam Al-Thubūt</div>
+      <div class="course-card-price"><s>$250.00</s> $125.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="fiqh">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=700&q=80" alt="Nur al-Idah Part 1" />
+      <span class="course-poster-badge completed">Completed</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Nūr al-Īḍāḥ (Part 01)</div>
+      <div class="course-card-price"><s>$200.00</s> $130.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="nahw">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?w=700&q=80" alt="Sharh Qatr al-Nada" />
+      <span class="course-poster-badge">Online</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Sharh Qatr al-Nada</div>
+      <div class="course-card-price">$25.00 / month <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="hadith usulhadith">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=700&q=80" alt="Hadith Specialization" />
+      <span class="course-poster-badge">2 Years</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Ḥadīth Specialization</div>
+      <div class="course-card-price">$150.00 / month for 24 months <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="nahw">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=700&q=80" alt="Al-Irab" />
+      <span class="course-poster-badge">1 Month</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">MD</div>
+        <div class="instr-info-lg"><div class="instr-name">M. Mohammad Daud</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Al-I'rāb 'an Qawā'id al-I'rāb</div>
+      <div class="course-card-price"><s>$125.00</s> $75.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="hadith adab">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=700&q=80" alt="Al-Adab al-Mufrad" />
+      <span class="course-poster-badge completed">Completed</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Al-Adab al-Mufrad</div>
+      <div class="course-card-price">$0.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="hadith">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=700&q=80" alt="Muwatta" />
+      <span class="course-poster-badge free">Free</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Introduction to Al-Muwaṭṭa'ayn</div>
+      <div class="course-card-price">$0.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="adab">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=700&q=80" alt="Lamiyyah" />
+      <span class="course-poster-badge">11 Lessons</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">The Famous Lāmiyyah of Abu Tālib</div>
+      <div class="course-card-price"><s>$60.00</s> $30.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="hadith">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?w=700&q=80" alt="Muwatta Malik" />
+      <span class="course-poster-badge">Online</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Islamic University Medina</div></div>
+      </div>
+      <div class="course-card-title">Analytical Study of Muwatta Imam Malik</div>
+      <div class="course-card-price">$0.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="hadith">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=700&q=80" alt="Shamail" />
+      <span class="course-poster-badge completed">Completed</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Shama'il Muhammadiyyah</div>
+      <div class="course-card-price">$0.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="tafsir">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=700&q=80" alt="Tafsir Abasa" />
+      <span class="course-poster-badge">5 Lessons</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Linguistic Tafsīr of Surah 'Abasa</div>
+      <div class="course-card-price">$0.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="tafsir">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=700&q=80" alt="Tafsir Naziat" />
+      <span class="course-poster-badge">6 Lessons</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Linguistic Tafsīr of Surah An-Nāzi'āt</div>
+      <div class="course-card-price">$0.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="tafsir">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=700&q=80" alt="Tafsir Naba" />
+      <span class="course-poster-badge">6 Lessons</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Linguistic Tafsīr of Surah An-Naba'</div>
+      <div class="course-card-price">$0.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="adab">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=700&q=80" alt="Min Adab al-Islam" />
+      <span class="course-poster-badge">33 Lessons</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">MD</div>
+        <div class="instr-info-lg"><div class="instr-name">M. Mohammad Daud</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Min Adab al-Islām</div>
+      <div class="course-card-price"><s>$100.00</s> $75.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="hadith usulhadith">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=700&q=80" alt="Intro Usul Hadith" />
+      <span class="course-poster-badge">9 Lessons</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Introduction to Uṣūl al-Ḥadīth</div>
+      <div class="course-card-price"><s>$50.00</s> $35.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="nahw">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?w=700&q=80" alt="Tuhfat Saniyyah" />
+      <span class="course-poster-badge">55 Lessons</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Al Tuḥfat Al Saniyyah</div>
+      <div class="course-card-price"><s>$200.00</s> $150.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="fiqh">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=700&q=80" alt="Intro Fiqh Hanafi" />
+      <span class="course-poster-badge">12 Lessons</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Introduction to Al Fiqh Al Ḥanafī</div>
+      <div class="course-card-price"><s>$50.00</s> $35.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="usulfiqh">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=700&q=80" alt="Intro Usul Fiqh" />
+      <span class="course-poster-badge">12 Lessons</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Introduction to Uṣūl al-Fiqh</div>
+      <div class="course-card-price"><s>$50.00</s> $35.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="aqidah">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=700&q=80" alt="Usul al-Din" />
+      <span class="course-poster-badge">10 Lessons</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Introduction to Uṣūl al-dīn</div>
+      <div class="course-card-price"><s>$50.00</s> $35.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="hadith usulhadith">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=700&q=80" alt="Nukhbat al-Fikar" />
+      <span class="course-poster-badge">32 Lessons</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Nukhbat al-Fikar</div>
+      <div class="course-card-price"><s>$250.00</s> $125.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="usulfiqh">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=700&q=80" alt="Sharh Waraqat" />
+      <span class="course-poster-badge">45 Lessons</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Sharḥ al-Waraqāt</div>
+      <div class="course-card-price"><s>$250.00</s> $125.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+  <div class="course-card-lg" data-cat="aqidah adab">
+    <div class="course-poster">
+      <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?w=700&q=80" alt="Taiyyah al-Ilbiri" />
+      <span class="course-poster-badge">10 Lessons</span>
+    </div>
+    <div class="course-card-body">
+      <div class="course-card-instructor">
+        <div class="instr-avatar-lg">OK</div>
+        <div class="instr-info-lg"><div class="instr-name">Sh. Omer Khurshid</div><div class="instr-school">Madinah University</div></div>
+      </div>
+      <div class="course-card-title">Tā'iyyah of Al-Ilbīrī</div>
+      <div class="course-card-price"><s>$60.00</s> $30.00 <small style="color:#888;font-weight:400;font-size:0.78rem">[USD]</small></div>
+      <button class="btn-view-lg">View Course</button>
+    </div>
+  </div>
+
+</div><!-- /.courses-page-grid -->
+
+<div id="site-footer"></div>
+<script>
+  window.PAGE_TITLE = 'Courses';
+  window.PAGE_ACTIVE_NAV = 'courses';
+</script>
+<script src="shared.js"></script>
+<script>
+  function filterCourses(cat, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.course-card-lg').forEach(card => {
+      if (cat === 'all') { card.style.display = ''; return; }
+      const cats = card.dataset.cat || '';
+      card.style.display = cats.split(' ').includes(cat) ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>

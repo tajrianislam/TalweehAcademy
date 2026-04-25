@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Us - Talweeh Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .contact-wrap { max-width: 1000px; margin: 0 auto; padding: 60px 40px 80px; }
+
+    /* Three-column contact cards */
+    .contact-methods {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      margin-bottom: 60px;
+    }
+    .contact-method-card {
+      text-align: center;
+      padding: 40px 24px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 3px 16px rgba(0,0,0,0.07);
+      border-top: 3px solid var(--gold);
+    }
+    .contact-method-icon {
+      font-size: 2.4rem;
+      color: var(--crimson);
+      margin-bottom: 18px;
+      display: block;
+    }
+    .contact-method-card h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--forest);
+      margin-bottom: 12px;
+    }
+    .contact-method-card p {
+      color: var(--text-mid);
+      font-size: 0.97rem;
+      line-height: 1.7;
+    }
+    .contact-method-card a {
+      color: var(--crimson);
+      font-weight: 600;
+    }
+    .contact-method-card a:hover { text-decoration: underline; }
+
+    /* Contact form */
+    .contact-form-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 44px 48px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border: 1.5px solid #e8e0cc;
+    }
+    .contact-form-section h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4rem; font-weight: 700;
+      color: var(--forest);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .contact-form-section .form-subtitle {
+      color: var(--text-mid);
+      font-size: 0.97rem;
+      margin-bottom: 28px;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem; font-weight: 600;
+      color: var(--text-dark);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .form-group input,
+    .form-group textarea {
+      border: 1.5px solid #ddd;
+      border-radius: 6px;
+      padding: 11px 14px;
+      font-family: 'EB Garamond', serif;
+      font-size: 1rem;
+      color: var(--text-dark);
+      background: var(--cream);
+      outline: none;
+      transition: border-color .2s;
+      resize: none;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus { border-color: var(--forest); background: #fff; }
+    .form-group textarea { height: 130px; }
+    .form-full { margin-bottom: 18px; }
+    .btn-send {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--crimson); color: #fff;
+      border: none; border-radius: 30px;
+      padding: 13px 36px;
+      font-family: 'Cinzel', serif; font-size: 0.92rem; font-weight: 600;
+      letter-spacing: 0.05em; cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-send:hover { background: var(--crimson-dark); }
+
+    @media (max-width: 780px) {
+      .contact-methods { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .contact-form-section { padding: 30px 22px; }
+      .contact-wrap { padding: 40px 18px 60px; }
+    }
+  </style>
+</head>
+<body>
+<div id="site-header"></div>
+
+<div class="page-banner" style="background-image:url('https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=1600&q=80')">
+  <div class="page-banner-content">
+    <h1>Contact Us</h1>
+    <div class="page-banner-ornament"><span>&#10070;&nbsp;&#10022;&nbsp;&#10070;</span></div>
+    <p class="page-banner-breadcrumb"><a href="index.html">Home</a> | Contact Us</p>
+  </div>
+</div>
+
+<div class="contact-wrap">
+
+  <!-- THREE CONTACT METHODS -->
+  <div class="contact-methods">
+    <div class="contact-method-card">
+      <span class="contact-method-icon"><i class="fa-solid fa-paper-plane"></i></span>
+      <h3>Follow us via Telegram</h3>
+      <p>Follow us on <a href="https://t.me/TalweehAcademy" target="_blank">https://t.me/TalweehAcademy</a> for updates.</p>
+    </div>
+    <div class="contact-method-card">
+      <span class="contact-method-icon"><i class="fa-solid fa-envelope"></i></span>
+      <h3>Contact us via Email</h3>
+      <p>Contact us on <a href="mailto:info@talweehacademy.com">info@talweehacademy.com</a> for any queries.</p>
+    </div>
+    <div class="contact-method-card">
+      <span class="contact-method-icon"><i class="fa-solid fa-file-lines"></i></span>
+      <h3>Contact us via Form</h3>
+      <p>Fill out the form below and we will get back to you as soon as possible.</p>
+    </div>
+  </div>
+
+  <!-- CONTACT FORM -->
+  <div class="contact-form-section">
+    <h2>Send us a Message</h2>
+    <p class="form-subtitle">Fill out the form below and we will get back to you as soon as possible.</p>
+    <form onsubmit="handleSubmit(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" placeholder="Name" />
+        </div>
+        <div class="form-group">
+          <label for="email">Email <span style="color:var(--crimson)">*</span></label>
+          <input type="email" id="email" name="email" placeholder="Email" required />
+        </div>
+      </div>
+      <div class="form-group form-full">
+        <label for="message">Message</label>
+        <textarea id="message" name="message" placeholder="Message"></textarea>
+      </div>
+      <button type="submit" class="btn-send"><i class="fa-solid fa-paper-plane"></i> Send</button>
+    </form>
+  </div>
+
+</div>
+
+<div id="site-footer"></div>
+<script>
+  window.PAGE_TITLE = 'Contact Us';
+  window.PAGE_ACTIVE_NAV = 'contact';
+</script>
+<script src="shared.js"></script>
+<script>
+  function handleSubmit(e) {
+    e.preventDefault();
+    alert('Thank you for your message! We will get back to you soon.');
+    e.target.reset();
+  }
+</script>
+</body>
+</html>
