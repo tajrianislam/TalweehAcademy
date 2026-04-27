@@ -114,6 +114,12 @@
   document.getElementById('site-footer').innerHTML = footerHTML;
   document.title = title + ' - Talweeh Academy';
 
+  if (!document.querySelector('script[src="button-actions.js"]')) {
+    const actionsScript = document.createElement('script');
+    actionsScript.src = 'button-actions.js';
+    document.body.appendChild(actionsScript);
+  }
+
   window.addEventListener('scroll', () => {
     const btn = document.getElementById('scroll-top');
     if (btn) btn.classList.toggle('visible', window.scrollY > 300);
