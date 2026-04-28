@@ -25,7 +25,7 @@ const ASSETS = [
   'wp-content/uploads/elementor/thumbs/mohammad_daud-rea2gp5lqnx8g5vcsmhaxcm9rs3vnrbh1l4wdyfmu4.webp',
 ]
 
-const BASE = 'https://talweehacademy.com'
+const BASE = 'https://Talweeh.com'
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MirrorBot/1.0'
 
 async function download(remotePath) {

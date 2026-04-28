@@ -306,7 +306,7 @@ function Footer() {
           <h4>Follow Us</h4>
           <div className="social-links">
             <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="X">X</a>
-            <a href="https://www.youtube.com/@talweehacademy" target="_blank" rel="noreferrer" aria-label="YouTube">{'\u25B6'}</a>
+            <a href="https://www.youtube.com/@Talweeh" target="_blank" rel="noreferrer" aria-label="YouTube">{'\u25B6'}</a>
             <a href="https://t.me" target="_blank" rel="noreferrer" aria-label="Telegram">{'\u25C9'}</a>
             <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram">{'\u25CE'}</a>
             <a href="https://wa.me" target="_blank" rel="noreferrer" aria-label="WhatsApp">{'\u260E'}</a>
@@ -602,7 +602,7 @@ function ContactPage() {
       <PageBanner title="Contact" breadcrumb="Contact" />
       <section className="content-section">
         <h2>Get in Touch</h2>
-        <p>Email: <a href="mailto:info@talweehacademy.com">info@talweehacademy.com</a></p>
+        <p>Email: <a href="mailto:info@Talweeh.com">info@Talweeh.com</a></p>
 
         <form
           className="contact-form"

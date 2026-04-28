@@ -6,17 +6,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PROJECT_ROOT = path.resolve(__dirname, '..')
 
 const PAGES = [
-  'https://talweehacademy.com/',
-  'https://talweehacademy.com/courses/',
-  'https://talweehacademy.com/articles/',
-  'https://talweehacademy.com/instructors/',
-  'https://talweehacademy.com/services/',
-  'https://talweehacademy.com/about/',
+  'https://Talweeh.com/',
+  'https://Talweeh.com/courses/',
+  'https://Talweeh.com/articles/',
+  'https://Talweeh.com/instructors/',
+  'https://Talweeh.com/services/',
+  'https://Talweeh.com/about/',
 ]
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) DiscoverBot/1.0'
 
-const IMAGE_HOST = 'talweehacademy.com'
+const IMAGE_HOST = 'Talweeh.com'
 const IMAGE_EXT = /\.(?:webp|jpe?g|png|gif|svg|avif)(?:$|\?)/i
 
 async function fetchHtml(url) {

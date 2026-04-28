@@ -7,7 +7,7 @@ const PROJECT_ROOT = path.resolve(__dirname, '..')
 const PUBLIC_ROOT = path.join(PROJECT_ROOT, 'public', 'talweeh')
 const LIST = path.join(__dirname, 'discovered-assets.json')
 
-const BASE = 'https://talweehacademy.com'
+const BASE = 'https://Talweeh.com'
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BulkBot/1.0'
 const CONCURRENCY = 6
 

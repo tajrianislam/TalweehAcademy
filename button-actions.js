@@ -1,9 +1,9 @@
 (function () {
   const externalLinks = {
-    dashboard: "https://talweehacademy.com/dashboard/",
-    login: "https://talweehacademy.com/dashboard/",
-    register: "https://talweehacademy.com/dashboard/",
-    youtube: "https://www.youtube.com/@talweehacademy",
+    dashboard: "https://Talweeh.com/dashboard/",
+    login: "https://Talweeh.com/dashboard/",
+    register: "https://Talweeh.com/dashboard/",
+    youtube: "https://www.youtube.com/@Talweeh",
   };
 
   function inferHref(button) {
