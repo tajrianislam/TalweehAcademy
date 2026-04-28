@@ -1,0 +1,136 @@
+{
+  "startUrl": "https://talweehacademy.com/",
+  "outputRoot": "site-mirror/talweehacademy.com-final",
+  "fetchedTotal": 1885,
+  "pages": 1201,
+  "assets": 568,
+  "errors": 116,
+  "sampleErrors": [
+    {
+      "url": "https://talweehacademy.com/wp-json/oembed/1.0/embed",
+      "status": 400,
+      "statusText": "Bad Request"
+    },
+    {
+      "url": "https://talweehacademy.com/xmlrpc.php",
+      "status": 405,
+      "statusText": "Method Not Allowed"
+    },
+    {
+      "url": "https://talweehacademy.com/wp-content/uploads/2025/11/elementor/thumbs/mohammad_daud-rea2gp5lqnx8g5vcsmhaxcm9rs3vnrbh1l4wdyfmu4.webp",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.icon%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.authorLink%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.url%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.sizes.large.url%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.uploadedToLink%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.originalImageURL%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.image.src%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.sizes.full.url%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.editLink%20%7D%7D&amp;image-editor",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.model.ogg%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.model.src%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.size.url%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.editLink%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.model.mp3%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.link%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.model.flac%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.model.m4a%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.model.url%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.sizes.medium.url%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.model.wav%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.model.flv%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    },
+    {
+      "url": "https://talweehacademy.com/dashboard/%7B%7B%20data.model.m4v%20%7D%7D",
+      "status": 403,
+      "statusText": "Forbidden"
+    }
+  ],
+  "finishedAt": "2026-04-26T22:40:59.234Z"
+}
