@@ -7,7 +7,7 @@ React + Vite
 1. Open the app folder:
 
 ```bash
-cd /Users/tajrianislam/Algo/PythonPractice/pyth/new_talweeh
+cd ~/new_talweeh
 ```
 
 2. Install dependencies:
