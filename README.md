@@ -7,7 +7,7 @@ React + Vite
 1. Open the app folder:
 
 ```bash
-cd ~/new_talweeh
+cd ~/TalweehAcademy/new_talweeh
 ```
 
 2. Install dependencies:
