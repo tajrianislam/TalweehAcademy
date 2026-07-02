@@ -19,6 +19,7 @@ import LessonQuizPage from './pages/lesson-quiz'
 import ResetPasswordPage from './pages/reset-password'
 import GenericPage from './pages/page'
 import DashboardPage from './pages/dashboard'
+import QuranPage from './pages/quran'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import AuthModal from './components/AuthModal'
 import { ASSET } from './constants/assets'
@@ -181,6 +182,7 @@ function LandingPage() {
           <div className="landing-nav-links">
             <Link to="/courses">Courses</Link>
             <Link to="/services">Services</Link>
+            <Link to="/quran">Quran</Link>
             <Link to="/articles">Articles</Link>
             <Link to="/about-us">About</Link>
             <Link to="/instructors">Instructors</Link>
@@ -433,6 +435,7 @@ function AppInner() {
         <Route path="/courses/:slug/lesson/:lessonId" element={<LessonPage />} />
         <Route path="/courses/:slug/lesson/:lessonId/quiz" element={<LessonQuizPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/quran" element={<QuranPage />} />
         <Route path="/p/:slug" element={<GenericPage />} />
       </Routes>
     </>

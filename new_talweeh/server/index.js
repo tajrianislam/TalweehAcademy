@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken')
 const rateLimit = require('express-rate-limit')
 const { sendPasswordResetEmail, sendContactNotificationEmail } = require('./email')
 const axios = require('axios')
+const quranRouter = require('./quran')
 
 const app = express()
 
@@ -1885,6 +1886,9 @@ app.delete('/api/users/:id', requireAdmin, async (req, res) => {
     res.status(500).json({ error: 'Failed to delete user' })
   }
 })
+
+// ── Quran Mushaf reader (proxies Al Quran Cloud — see server/quran.js) ────
+app.use('/api/quran', quranRouter)
 
 // ── Production static hosting ─────────────────────────────
 // Serves the Vite build (../dist) and falls back to index.html for any

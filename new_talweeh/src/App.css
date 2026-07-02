@@ -4464,3 +4464,479 @@ button {
   color: #a23b3b;
 }
 
+/* ── Quran Mushaf reader ─────────────────────────────────── */
+@font-face {
+  font-family: 'Talweeh Naskh';
+  src: url('/wp-content/uploads/2024/08/NotoNaskhArabic-Regular.woff2') format('woff2');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Talweeh Naskh';
+  src: url('/wp-content/uploads/2024/08/NotoNaskhArabic-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+}
+
+.qmr-shell main {
+  padding-bottom: 6.5rem; /* room for the fixed audio bar */
+}
+
+.qmr-hero {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 1rem;
+  text-align: center;
+}
+
+.qmr-hero h1 {
+  color: var(--green-dark);
+  font-family: 'Talweeh Cinzel', Georgia, serif;
+}
+
+.qmr-hero p {
+  color: var(--muted);
+}
+
+.qmr-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem 2rem;
+  align-items: start;
+}
+
+.qmr-sidebar {
+  position: sticky;
+  top: 1rem;
+  background: #fff;
+  border: 1px solid #e4e9e2;
+  border-radius: 10px;
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.qmr-chapter-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.qmr-search {
+  margin: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d6ded5;
+  border-radius: 8px;
+  font-family: inherit;
+}
+
+.qmr-chapter-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.5rem 0.75rem;
+  overflow-y: auto;
+}
+
+.qmr-chapter-btn {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 2rem 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.qmr-chapter-btn:hover {
+  background: var(--green-soft);
+}
+
+.qmr-chapter-btn.active {
+  background: var(--green);
+  color: #fff;
+}
+
+.qmr-chapter-btn.active .qmr-chapter-names em {
+  color: #dcecdd;
+}
+
+.qmr-chapter-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.qmr-chapter-btn.active .qmr-chapter-num {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.qmr-chapter-names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.qmr-chapter-names strong {
+  font-size: 0.92rem;
+}
+
+.qmr-chapter-names em {
+  font-style: normal;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.qmr-chapter-arabic {
+  font-family: 'Talweeh Naskh', serif;
+  font-size: 1rem;
+}
+
+.qmr-reader {
+  background: #fff;
+  border: 1px solid #e4e9e2;
+  border-radius: 10px;
+  padding: 1.5rem;
+  min-width: 0;
+}
+
+.qmr-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eef2ee;
+  margin-bottom: 1.25rem;
+}
+
+.qmr-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.qmr-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.qmr-select select {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #d6ded5;
+  font-family: inherit;
+}
+
+.qmr-font-control {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.qmr-font-control button {
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 6px;
+  border: 1px solid #d6ded5;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.qmr-reciter-picker {
+  position: relative;
+}
+
+.qmr-reciter-toggle {
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #d6ded5;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.qmr-reciter-dropdown {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 15;
+  width: 260px;
+  background: #fff;
+  border: 1px solid #d6ded5;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 0.6rem;
+}
+
+.qmr-reciter-dropdown input {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #d6ded5;
+  border-radius: 6px;
+  font-family: inherit;
+  margin-bottom: 0.5rem;
+}
+
+.qmr-reciter-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.qmr-reciter-dropdown li button {
+  width: 100%;
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.qmr-reciter-dropdown li button:hover {
+  background: var(--green-soft);
+}
+
+.qmr-reciter-dropdown li button.active {
+  background: var(--green);
+  color: #fff;
+}
+
+.qmr-surah-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.qmr-surah-header h2 {
+  color: var(--green-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.qmr-surah-arabic {
+  font-family: 'Talweeh Naskh', serif;
+  font-size: 1.4rem;
+  color: var(--ink);
+}
+
+.qmr-surah-header p {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+.qmr-ayah-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.qmr-ayah {
+  display: flex;
+  gap: 1rem;
+  padding: 1.1rem 0.5rem;
+  border-bottom: 1px solid #eef2ee;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.qmr-ayah.active {
+  background: var(--green-soft);
+}
+
+.qmr-ayah-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.qmr-ayah-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.qmr-ayah-play {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1px solid var(--green);
+  background: #fff;
+  color: var(--green-dark);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qmr-ayah.active .qmr-ayah-play {
+  background: var(--green);
+  color: #fff;
+}
+
+.qmr-ayah-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.qmr-arabic {
+  font-family: 'Talweeh Naskh', serif;
+  font-size: var(--qmr-arabic-size, 30px);
+  line-height: 2.1;
+  text-align: right;
+  color: var(--ink);
+  margin: 0 0 0.5rem;
+}
+
+.qmr-translation {
+  font-size: var(--qmr-translation-size, 17px);
+  color: var(--muted);
+  margin: 0;
+}
+
+.qmr-status {
+  text-align: center;
+  color: var(--muted);
+  padding: 2rem 0;
+}
+
+.qmr-status.qmr-error {
+  color: var(--red);
+}
+
+.qmr-empty {
+  padding: 0.75rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.qmr-audio-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  background: #fff;
+  border-top: 1px solid #e0e6df;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  padding: 0.65rem 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.qmr-audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.qmr-audio-controls button {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  border: 1px solid #d6ded5;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qmr-audio-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.qmr-audio-main {
+  width: 2.7rem !important;
+  height: 2.7rem !important;
+  background: var(--green) !important;
+  border-color: var(--green) !important;
+  color: #fff;
+}
+
+.qmr-audio-meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+  min-width: 120px;
+}
+
+.qmr-audio-toggles {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+
+.qmr-audio-toggles label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.qmr-audio-error {
+  flex-basis: 100%;
+  color: var(--red);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 860px) {
+  .qmr-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .qmr-sidebar {
+    position: static;
+    max-height: 320px;
+  }
+
+  .qmr-audio-toggles {
+    margin-left: 0;
+  }
+}
+

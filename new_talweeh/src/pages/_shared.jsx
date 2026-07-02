@@ -6,6 +6,7 @@ import { ASSET } from '../constants/assets'
 const navLinks = [
   { label: 'Courses', to: '/courses' },
   { label: 'Services', to: '/services' },
+  { label: 'Quran', to: '/quran' },
   { label: 'Articles', to: '/articles' },
   { label: 'About', to: '/about-us' },
   { label: 'Instructors', to: '/instructors' },
