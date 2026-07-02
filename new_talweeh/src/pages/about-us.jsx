@@ -1,6 +1,6 @@
+import { Link } from 'react-router-dom'
 import { PageHeader, PageHero, PageFooter } from './_shared'
-
-const ASSET = 'https://talweehacademy.com/wp-content/uploads'
+import { ASSET } from '../constants/assets'
 
 const highlights = [
   {
@@ -135,14 +135,9 @@ export default function AboutUsPage() {
           <div className="about-text-inner">
             <h2>Terms &amp; Conditions</h2>
             <img src={`${ASSET}/2024/08/border3.svg`} alt="" />
-            <a
-              className="outline-btn-green"
-              href="https://talweehacademy.com/terms-conditions/"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <Link className="outline-btn-green" to="/p/terms-conditions">
               Read Now
-            </a>
+            </Link>
           </div>
         </section>
       </main>

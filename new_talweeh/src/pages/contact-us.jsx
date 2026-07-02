@@ -4,14 +4,31 @@ import { PageHeader, PageHero, PageFooter } from './_shared'
 export default function ContactUsPage() {
   const [form, setForm] = useState({ name: '', email: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
 
   function handleChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    setSubmitted(true)
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to send message')
+      setSubmitted(true)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -104,8 +121,9 @@ export default function ContactUsPage() {
                   />
                 </div>
 
-                <button type="submit" className="journey-button">
-                  Send
+                {error && <p className="admin-msg error">{error}</p>}
+                <button type="submit" className="journey-button" disabled={saving}>
+                  {saving ? 'Sending…' : 'Send'}
                 </button>
               </form>
             )}

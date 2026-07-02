@@ -1,0 +1,43 @@
+---
+description: React frontend conventions for Talweeh Academy
+globs: new_talweeh/src/**
+alwaysApply: false
+---
+
+# Frontend Conventions
+
+## Routing
+
+- React Router v6 in `App.jsx`.
+- Pages live in `src/pages/`; register new routes in `App.jsx`.
+- Shared layout: `PageHeader` and `PageFooter` from `_shared.jsx`.
+
+## Auth
+
+- Use `useAuth()` from `context/AuthContext.jsx` for user state and auth actions.
+- Authenticated API calls must include `credentials: 'include'` (cookie-based JWT).
+- Login/register UI is in `AuthModal.jsx`; password reset page at `/reset-password`.
+
+## Styling
+
+- Add styles to `App.css` with feature-prefixed class names (e.g. `aqb-`, `rp-`, `lesson-`, `lqp-`, `modal-`).
+- Match existing visual patterns: green palette (`--green`, `#3a5a40`, `#243f2b`).
+
+## Course / lesson UX
+
+- Quizzes appear in the sidebar under their lesson (`has_quiz` flag).
+- Users take quizzes on the dedicated route: `/courses/:slug/lesson/:lessonId/quiz`.
+- Do not embed the quiz under the video for regular users; admin quiz builder stays on the lesson page.
+- Completed lessons show visual indicators in the sidebar (`.completed` class).
+
+## Assets
+
+- Remote images/fonts from `talweehacademy.com` CDN — internet required locally.
+
+## PropTypes
+
+- Some files use `/* eslint-disable react/prop-types */` — follow the convention of the file you edit.
+
+## API calls
+
+- Dev server proxies `/api` to `http://localhost:3001` — use relative paths like `/api/courses/...`.

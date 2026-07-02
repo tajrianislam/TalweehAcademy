@@ -1,0 +1,19 @@
+---
+description: Use Context7 for external library and tooling documentation
+alwaysApply: true
+---
+
+# Context7 Documentation Rule
+
+Always use Context7 MCP when working with external libraries, frameworks, APIs, SDKs, or tooling.
+
+Before suggesting code or configuration for libraries such as React, Next.js, Express, Node.js, MongoDB, MySQL, Prisma, Auth.js, Tailwind, Docker, Stripe, Clerk, Supabase, Firebase, or similar tools:
+
+- Resolve the library with Context7.
+- Fetch the relevant documentation.
+- Prefer version-specific documentation when the project has a `package.json`, lockfile, or config file showing the installed version.
+- Do not rely only on model memory for library APIs.
+- Use Context7 especially for setup steps, configuration, breaking changes, migrations, and unfamiliar API usage.
+- If Context7 does not have useful docs for a library, say that clearly and continue with best effort.
+
+Do not use Context7 for plain JavaScript, CSS, HTML, simple logic, algorithm questions, writing text, or project-specific code that does not require external documentation.

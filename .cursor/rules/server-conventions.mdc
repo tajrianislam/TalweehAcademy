@@ -1,0 +1,60 @@
+---
+description: Express API and MySQL conventions for the Talweeh server
+globs: new_talweeh/server/**
+alwaysApply: false
+---
+
+# Server Conventions
+
+## Module system
+
+- CommonJS only: `require()` / `module.exports` — not ESM `import`.
+
+## Schema migrations
+
+- Add tables/columns via guarded `ensure*Schema()` functions called from `startServer()`.
+- Reuse helpers: `tableExists`, `ensureIndex`, `ensureForeignKey`, `ensureColumn`.
+- Include indexes and foreign keys with `ON DELETE CASCADE` where appropriate.
+- Never run raw one-off `ALTER TABLE` without idempotent guards.
+
+Example pattern:
+
+```javascript
+async function ensureMySchema() {
+  await pool.query(`CREATE TABLE IF NOT EXISTS my_table (...)`)
+  if (await tableExists('auth_users')) {
+    await ensureForeignKey('my_table', 'fk_my_user', `ALTER TABLE ...`)
+  }
+}
+```
+
+## Auth middleware
+
+- `requireAuth` and `requireAdmin` are **async** — they call `verifyJwtAndCheckRevocation`.
+- JWT is in an `httpOnly` cookie; validate `password_changed_at` vs token `iat` to invalidate sessions after password reset.
+- Use `normalizeEmail()` and `isValidEmail()` for email inputs.
+
+## Rate limiting
+
+- Apply rate limiters to sensitive auth endpoints (`authLimiter`, `resetLimiter`).
+
+## Password reset
+
+- Store only SHA-256 hash of tokens in `password_reset_tokens`.
+- Never log raw tokens or reset URLs.
+- Forgot-password always returns the same generic 200 message.
+
+## Email (Resend)
+
+- Lazy-init Resend in `email.js` — missing `RESEND_API_KEY` must not crash server startup.
+- Send errors are logged server-side; routes still return generic success where required.
+
+## Enrollment
+
+- Paid course access = row in `enrollments (user_id, course_id)`.
+- Free lesson access = `lessons.is_free` flag (separate from enrollment).
+- Admin grant: `POST /api/enrollments` with `{ user_email, course_id }`.
+
+## After changes
+
+- Restart the server to pick up code and schema changes.

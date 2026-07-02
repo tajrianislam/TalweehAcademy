@@ -5,14 +5,19 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "npm --prefix server start",
+    "install:server": "npm --prefix server install",
     "build": "vite build",
+    "build:deploy": "npm run install:server && npm run build",
+    "start": "node server/index.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.30.3"
+    "react-router-dom": "^6.30.3",
+    "react-youtube": "^10.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

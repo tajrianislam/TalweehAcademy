@@ -1,38 +1,27 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { PageHeader, PageHero, PageFooter } from './_shared'
-
-const ASSET = 'https://talweehacademy.com/wp-content/uploads'
-
-const instructors = [
-  {
-    name: 'Sheikh Omer Khurshid',
-    image: `${ASSET}/2025/02/shomarkhurshid.webp`,
-    bioHref: 'https://talweehacademy.com/instructor/sheikh-omer-khurshid/',
-  },
-  {
-    name: 'Sheikh Hamza Aktas',
-    image: `${ASSET}/2025/10/SheikhHamza.webp`,
-    bioHref: 'https://talweehacademy.com/instructor/sheikh-hamza-aktas/',
-  },
-  {
-    name: 'Mufti Mohammad Daud Khurshid',
-    image: `${ASSET}/2025/11/mohammad_daud.webp`,
-    bioHref: 'https://talweehacademy.com/instructor/mufti-mohammad-daud-khurshid/',
-  },
-  {
-    name: 'Shaykh Farhan Ingar',
-    image: `${ASSET}/2026/03/Shaykh-Farhan-Ingar.webp`,
-    bioHref: 'https://talweehacademy.com/instructor/shaykh-farhan-ingar/',
-  },
-]
+import { ASSET } from '../constants/assets'
 
 export default function InstructorsPage() {
+  const [instructors, setInstructors] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/instructors')
+      .then((r) => (r.ok ? r.json() : Promise.reject('Failed to fetch instructors')))
+      .then(setInstructors)
+      .catch((e) => setError(String(e)))
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <div className="page-shell">
       <PageHeader />
       <main>
         <PageHero title="Instructors" />
 
-        {/* Get to know your instructors */}
         <section className="instructors-intro">
           <div className="instructors-intro-inner">
             <h2>Get to know your instructors</h2>
@@ -55,26 +44,30 @@ export default function InstructorsPage() {
           </div>
         </section>
 
-        {/* Our Instructors grid */}
         <section className="instructors-grid-section">
           <div className="instructors-grid-inner">
             <h2>Our Instructors</h2>
             <img src={`${ASSET}/2024/08/border3.svg`} alt="" />
+
+            {loading && <p className="courses-status">Loading instructors...</p>}
+            {error && <p className="courses-status courses-error">{error}</p>}
+            {!loading && !error && instructors.length === 0 && (
+              <p className="courses-status">No instructors found.</p>
+            )}
+
             <div className="instructors-grid">
               {instructors.map((instructor) => (
-                <article key={instructor.name} className="instructor-card-simple">
+                <article key={instructor.id} className="instructor-card-simple">
                   <div className="instructor-card-simple-photo">
-                    <img src={instructor.image} alt={instructor.name} />
+                    {instructor.photoUrl
+                      ? <img src={instructor.photoUrl} alt={instructor.name} />
+                      : <div className="course-art-placeholder" />}
                   </div>
                   <h3>{instructor.name}</h3>
-                  <a
-                    className="read-bio-btn"
-                    href={instructor.bioHref}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
+                  {instructor.designation && <p className="instructor-designation">{instructor.designation}</p>}
+                  <Link className="read-bio-btn" to={`/instructors/${instructor.slug}`}>
                     Read Bio
-                  </a>
+                  </Link>
                 </article>
               ))}
             </div>

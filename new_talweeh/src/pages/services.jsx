@@ -1,29 +1,25 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { PageHeader, PageHero, PageFooter } from './_shared'
 
-const ASSET = 'https://talweehacademy.com/wp-content/uploads'
-const THUMBS = `${ASSET}/elementor/thumbs`
-
-const services = [
-  {
-    title: 'Advanced Hadith Studies in Mishkāt al-Maṣābīḥ',
-    date: 'April 29, 2026',
-    readTime: '2 Minutes',
-    excerpt: '',
-    image: `${THUMBS}/The-science-of-Jarḥ-wa-Taʿdil-rldpxb21taxa7cyzajyigvjjrbpq3oox5a69bw8i6s.webp`,
-    href: 'https://talweehacademy.com/our-service/advanced-hadith-studies-in-mishkat-al-masabih/',
-  },
-  {
-    title: '📚 Monday Night Readings',
-    date: 'April 1, 2026',
-    readTime: '1 Minutes',
-    excerpt:
-      "Join us on Zoom for weekly readings from Siyar A'lām al-Nubalā', the renowned work chronicling the lives of the great scholars and exemplary figures of Islam. These gatherings offer an opportunity to reflect on their",
-    image: `${THUMBS}/Monday-Night-Readings-rldoxpw1247gmuny3o60kcua354fo8erx4zg7r03ro.webp`,
-    href: 'https://talweehacademy.com/our-service/%f0%9f%93%9a-monday-night-readings/',
-  },
-]
+function formatDate(date) {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+}
 
 export default function ServicesPage() {
+  const [services, setServices] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/services')
+      .then((r) => (r.ok ? r.json() : Promise.reject('Failed to fetch services')))
+      .then(setServices)
+      .catch((e) => setError(String(e)))
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <div className="page-shell">
       <PageHeader />
@@ -31,25 +27,30 @@ export default function ServicesPage() {
         <PageHero title="Services" />
 
         <section className="services-archive">
+          {loading && <p className="courses-status">Loading services...</p>}
+          {error && <p className="courses-status courses-error">{error}</p>}
+          {!loading && !error && services.length === 0 && (
+            <p className="courses-status">No services found.</p>
+          )}
+
           {services.map((service) => (
-            <article key={service.title} className="service-post-card">
-              <a href={service.href} className="service-post-thumb" target="_blank" rel="noreferrer">
-                <img src={service.image} alt={service.title} />
-              </a>
+            <article key={service.id} className="service-post-card">
+              <Link to={`/services/${service.slug}`} className="service-post-thumb">
+                {service.thumbnailUrl
+                  ? <img src={service.thumbnailUrl} alt={service.title} />
+                  : <div className="course-art-placeholder" />}
+              </Link>
               <div className="service-post-body">
                 <h1>
-                  <a href={service.href} target="_blank" rel="noreferrer">
-                    {service.title}
-                  </a>
+                  <Link to={`/services/${service.slug}`}>{service.title}</Link>
                 </h1>
                 <div className="article-meta">
-                  <a href={service.href} target="_blank" rel="noreferrer">{service.date}</a>
-                  <a href={service.href} target="_blank" rel="noreferrer">{service.readTime}</a>
+                  {service.publishedAt && <span>{formatDate(service.publishedAt)}</span>}
                 </div>
                 {service.excerpt && <p>{service.excerpt}</p>}
-                <a className="service-read-more" href={service.href} target="_blank" rel="noreferrer">
+                <Link className="service-read-more" to={`/services/${service.slug}`}>
                   Read More.....
-                </a>
+                </Link>
               </div>
             </article>
           ))}

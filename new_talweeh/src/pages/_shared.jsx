@@ -1,6 +1,7 @@
+/* eslint-disable react/prop-types */
 import { Link } from 'react-router-dom'
-
-const ASSET = 'https://talweehacademy.com/wp-content/uploads'
+import { useAuth } from '../context/AuthContext'
+import { ASSET } from '../constants/assets'
 
 const navLinks = [
   { label: 'Courses', to: '/courses' },
@@ -9,6 +10,7 @@ const navLinks = [
   { label: 'About', to: '/about-us' },
   { label: 'Instructors', to: '/instructors' },
   { label: 'Contact', to: '/contact-us' },
+  { label: 'Test', to: '/test' },
 ]
 
 const footerLinks = {
@@ -20,19 +22,21 @@ const footerLinks = {
     { label: 'Articles', to: '/articles' },
   ],
   'Login/Register': [
-    { label: 'Login as a Student', to: '#' },
-    { label: 'Register as a Student', to: '#' },
-    { label: 'Dashboard Panel', to: '#' },
+    { label: 'Courses', to: '/courses' },
+    { label: 'Dashboard Panel', to: '/dashboard' },
+    { label: 'Contact', to: '/contact-us' },
   ],
   Miscellaneous: [
-    { label: 'My Profile', to: '#' },
-    { label: 'Enrolled Courses', to: '#' },
-    { label: 'Purchase History', to: '#' },
-    { label: 'My Quiz Attempts', to: '#' },
+    { label: 'My Dashboard', to: '/dashboard' },
+    { label: 'Enrolled Courses', to: '/dashboard' },
+    { label: 'Purchase History', to: '/dashboard' },
+    { label: 'Terms & Conditions', to: '/p/terms-conditions' },
   ],
 }
 
 export function PageHeader() {
+  const { user, logout, openAuthModal } = useAuth()
+
   return (
     <header className="site-header">
       <div className="promo-bar">
@@ -42,6 +46,19 @@ export function PageHeader() {
         </span>
         <button type="button" aria-label="Close announcement">×</button>
       </div>
+      <div className="site-header-top">
+        {user ? (
+          <>
+            <span className="top-bar-user">Welcome, {user.name}</span>
+            <button type="button" className="top-bar-btn" onClick={logout}>Logout</button>
+          </>
+        ) : (
+          <>
+            <button type="button" className="top-bar-btn" onClick={() => openAuthModal('login')}>Login as a Student</button>
+            <button type="button" className="top-bar-btn" onClick={() => openAuthModal('register')}>Register as a Student</button>
+          </>
+        )}
+      </div>
       <nav className="main-nav" aria-label="Main navigation">
         <Link className="brand" to="/">
           <img src={`${ASSET}/2024/11/logo_final-scaled-600x171.webp`} alt="Talweeh Academy" />
@@ -50,6 +67,7 @@ export function PageHeader() {
           {navLinks.map(({ label, to }) => (
             <Link to={to} key={label}>{label}</Link>
           ))}
+          {user?.role === 'admin' && <Link to="/admin">Admin</Link>}
         </div>
         <div className="nav-actions">
           <button className="cart-button" type="button" aria-label="Cart">

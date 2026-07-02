@@ -1,0 +1,38 @@
+---
+description: Core Talweeh Academy project conventions
+alwaysApply: true
+---
+
+# Talweeh Core Conventions
+
+## Where the app lives
+
+- Application code is under `new_talweeh/` (not the repo root).
+- Frontend: `new_talweeh/src/`
+- Backend: `new_talweeh/server/`
+- See [AGENTS.md](../../AGENTS.md) for architecture and common tasks.
+
+## Local dev
+
+- Run **both** frontend (`npm run dev`) and API (`npm run server`) for full-stack work.
+- **Restart the backend** after any change to `new_talweeh/server/` — there is no HMR on the API.
+- Frontend hot-reloads via Vite. Check the terminal for the port (5173 or 5174).
+- Vite proxies `/api` to `http://localhost:3001`.
+
+## Code style
+
+- Plain **JSX** (no TypeScript in this project).
+- Match existing patterns in the file you are editing — naming, imports, structure.
+- Reuse existing components and helpers; avoid reimplementing similar logic.
+- Keep diffs minimal; do not refactor unrelated code.
+- Comments only for non-obvious business logic.
+
+## Secrets and env
+
+- Never commit `server/.env`, API keys, or credentials.
+- Document new env vars in `server/.env.example`.
+
+## Context efficiency
+
+- Prefer `@file` or `@symbol` over `@codebase` unless a broad search is truly needed.
+- Close unrelated open files before starting agent tasks.

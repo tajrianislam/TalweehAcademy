@@ -137,3 +137,14 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# macOS
+.DS_Store
+
+# Railway CLI scratch dirs
+.railway-config-pull-*
+
+# Large local-only data (not deployed via git — see AGENTS.md / R2 migration)
+new_talweeh/talweeh-academy.sql
+new_talweeh/users-export.tsv
+new_talweeh/public/wp-content/

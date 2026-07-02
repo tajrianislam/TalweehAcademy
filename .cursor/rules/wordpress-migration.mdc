@@ -1,0 +1,46 @@
+---
+description: Guidance for migrating users and enrollments from WordPress MySQL
+alwaysApply: false
+---
+
+# WordPress Migration Guide
+
+Use this when importing students or course access from the legacy WordPress database.
+
+## Join key: email
+
+- WordPress: `wp_users.user_email`
+- New app: `auth_users.email` (normalized lowercase)
+- Match users by email when creating enrollments.
+
+## Passwords do not transfer
+
+- WordPress uses phpass (`$P$...`); this app uses bcrypt.
+- Import users with a placeholder password hash, then have students set passwords via the **password-reset email flow** (`/reset-password`).
+- Optionally bulk-trigger reset emails after import.
+
+## Course access mapping
+
+- Legacy "who bought what" lives in WP e-commerce/LMS tables (WooCommerce, LearnDash, Tutor LMS, etc.) — identify the source table first.
+- New app access = one row per `(user_id, course_id)` in `enrollments`.
+- Old WP course IDs ≠ new `courses.id` — maintain a mapping (spreadsheet or script).
+
+## Grant access to one student
+
+1. Ensure an `auth_users` row exists for their email.
+2. Grant enrollment:
+   - Admin API: `POST /api/enrollments` with `{ user_email, course_id }`
+   - Or SQL: `INSERT INTO enrollments (user_id, course_id) VALUES (?, ?)`
+
+## Bulk import checklist
+
+1. Export WP users → insert into `auth_users` (name, email, placeholder hash).
+2. Map WP course IDs → new `courses.id`.
+3. Export purchase/enrollment records → insert into `enrollments`.
+4. Send password-reset emails so students can log in.
+5. Verify a sample student can access their enrolled course (non-free lessons).
+
+## Reference
+
+- Enrollment API and schema: `new_talweeh/server/index.js` (`ensureEnrollmentsSchema`, `/api/enrollments`).
+- Full project context: [AGENTS.md](../../AGENTS.md)
