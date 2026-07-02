@@ -275,7 +275,7 @@ export function ArticlesAdmin() {
         <div className="form-row"><label>Excerpt</label>
           <textarea rows={2} value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} /></div>
         <div className="form-row"><label>Content (JSON blocks: heading / subheading / paragraph / video)</label>
-          <textarea rows={10} value={form.contentText} onChange={(e) => setForm({ ...form, contentText: e.target.value })} style={{ fontFamily: 'monospace' }} /></div>
+          <textarea rows={10} value={form.contentText} onChange={(e) => setForm({ ...form, contentText: e.target.value })} className="admin-textarea-code" /></div>
         {msg && <p className={`admin-msg ${msg.type}`}>{msg.text}</p>}
         <div className="admin-form-actions">
           <button type="submit" className="journey-button" disabled={saving}>{saving ? 'Saving…' : (editId ? 'Update' : 'Create')}</button>
@@ -349,7 +349,7 @@ export function PagesAdmin() {
             <input value={title} onChange={(e) => setTitle(e.target.value)} required /></div>
         </div>
         <div className="form-row"><label>Content (HTML)</label>
-          <textarea rows={12} value={contentHtml} onChange={(e) => setContentHtml(e.target.value)} style={{ fontFamily: 'monospace' }} /></div>
+          <textarea rows={12} value={contentHtml} onChange={(e) => setContentHtml(e.target.value)} className="admin-textarea-code" /></div>
         {msg && <p className={`admin-msg ${msg.type}`}>{msg.text}</p>}
         <div className="admin-form-actions">
           <button type="submit" className="journey-button" disabled={saving}>{saving ? 'Saving…' : 'Save Page'}</button>
@@ -445,7 +445,7 @@ export function CommerceAdmin() {
             </table>
           </div>
 
-          <p className="add-lesson-form-title" style={{ marginTop: '2rem' }}>Orders ({orders.length})</p>
+          <p className="add-lesson-form-title admin-section-spaced">Orders ({orders.length})</p>
           <div className="admin-enrollment-table-wrap">
             <table className="admin-enrollment-table">
               <thead><tr><th>Order</th><th>Customer</th><th>Status</th><th>Total</th><th>Date</th></tr></thead>

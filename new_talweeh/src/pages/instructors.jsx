@@ -49,7 +49,7 @@ export default function InstructorsPage() {
             <h2>Our Instructors</h2>
             <img src={`${ASSET}/2024/08/border3.svg`} alt="" />
 
-            {loading && <p className="courses-status">Loading instructors...</p>}
+            {loading && <p className="courses-status">Loading instructors…</p>}
             {error && <p className="courses-status courses-error">{error}</p>}
             {!loading && !error && instructors.length === 0 && (
               <p className="courses-status">No instructors found.</p>

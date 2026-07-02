@@ -24,11 +24,11 @@ export default function GenericPage() {
       <main>
         <PageHero title={page?.title || 'Page'} />
         <section className="static-page">
-          {loading && <p className="courses-status">Loading...</p>}
+          {loading && <p className="courses-status">Loading…</p>}
           {error && (
             <>
               <p className="courses-status courses-error">{error}</p>
-              <p style={{ textAlign: 'center' }}><Link to="/">← Back home</Link></p>
+              <p className="status-back-link"><Link to="/">← Back home</Link></p>
             </>
           )}
           {page && (

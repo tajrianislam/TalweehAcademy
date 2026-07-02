@@ -75,7 +75,7 @@ export default function LessonQuizPage() {
       <PageHeader />
       <main>
         <p className="courses-status courses-error">{error || 'Not found'}</p>
-        <p style={{ textAlign: 'center' }}><Link to={`/courses/${slug}`}>← Back to Course</Link></p>
+        <p className="status-back-link"><Link to={`/courses/${slug}`}>← Back to Course</Link></p>
       </main>
       <PageFooter />
     </div>
@@ -133,7 +133,7 @@ export default function LessonQuizPage() {
                           ? (
                             <span className="lesson-done-mark" title="Completed">
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                                <circle cx="12" cy="12" r="12" fill="#3a5a40"/>
+                                <circle cx="12" cy="12" r="12" fill="currentColor"/>
                                 <polyline points="6 12 10 16 18 8" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                               </svg>
                             </span>

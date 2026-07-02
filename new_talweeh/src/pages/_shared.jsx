@@ -114,7 +114,7 @@ export function PageFooter() {
             ))}
           </div>
         ))}
-        <div className="footer-column social-column">
+        <div className="footer-column">
           <h4>Follow Us</h4>
           <div className="social-links">
             <a href="#" aria-label="X / Twitter">𝕏</a>

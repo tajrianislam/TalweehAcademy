@@ -48,7 +48,7 @@ export default function ArticleDetailPage() {
     <div className="page-shell">
       <PageHeader />
       <main>
-        {loading && <p className="courses-status">Loading article...</p>}
+        {loading && <p className="courses-status">Loading article…</p>}
 
         {error && (
           <section className="article-detail-shell">

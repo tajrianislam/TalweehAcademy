@@ -590,7 +590,7 @@ function ManageEnrollmentsSection({ courses }) {
         </button>
       </form>
 
-      <div style={{ marginTop: '2rem' }}>
+      <div className="admin-section-spaced">
         <p className="add-lesson-form-title">Current Enrollments</p>
         {loadingList ? (
           <p className="courses-status">Loading enrollments…</p>

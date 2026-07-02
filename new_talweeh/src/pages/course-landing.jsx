@@ -43,7 +43,7 @@ export default function CourseLandingPage() {
       <PageHeader />
       <main>
         <p className="courses-status courses-error">{error || 'Course not found'}</p>
-        <p style={{ textAlign: 'center' }}><Link to="/courses">← Back to Courses</Link></p>
+        <p className="status-back-link"><Link to="/courses">← Back to Courses</Link></p>
       </main>
       <PageFooter />
     </div>

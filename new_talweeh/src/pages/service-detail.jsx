@@ -27,7 +27,7 @@ export default function ServiceDetailPage() {
     <div className="page-shell">
       <PageHeader />
       <main>
-        {loading && <p className="courses-status">Loading service...</p>}
+        {loading && <p className="courses-status">Loading service…</p>}
 
         {error && (
           <section className="article-detail-shell">

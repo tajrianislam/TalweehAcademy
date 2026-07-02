@@ -27,7 +27,7 @@ export default function ServicesPage() {
         <PageHero title="Services" />
 
         <section className="services-archive">
-          {loading && <p className="courses-status">Loading services...</p>}
+          {loading && <p className="courses-status">Loading services…</p>}
           {error && <p className="courses-status courses-error">{error}</p>}
           {!loading && !error && services.length === 0 && (
             <p className="courses-status">No services found.</p>

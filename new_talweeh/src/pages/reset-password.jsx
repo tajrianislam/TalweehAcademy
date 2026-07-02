@@ -46,8 +46,8 @@ export default function ResetPasswordPage() {
           <div className="rp-success">
             <div className="rp-success-icon">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="11" stroke="#3a5a40" strokeWidth="2"/>
-                <path d="M7 12.5l3.5 3.5 6-7" stroke="#3a5a40" strokeWidth="2"
+                <circle cx="12" cy="12" r="11" stroke="currentColor" strokeWidth="2"/>
+                <path d="M7 12.5l3.5 3.5 6-7" stroke="currentColor" strokeWidth="2"
                       strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>

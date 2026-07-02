@@ -22,7 +22,7 @@ export default function InstructorDetailPage() {
     <div className="page-shell">
       <PageHeader />
       <main>
-        {loading && <p className="courses-status">Loading instructor...</p>}
+        {loading && <p className="courses-status">Loading instructor…</p>}
 
         {error && (
           <section className="article-detail-shell">
@@ -32,7 +32,7 @@ export default function InstructorDetailPage() {
         )}
 
         {instructor && (
-          <article className="article-detail-shell instructor-detail">
+          <article className="article-detail-shell">
             <nav className="article-breadcrumb">
               <Link to="/">Home</Link>
               <span>|</span>

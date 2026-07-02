@@ -65,7 +65,7 @@ export default function ArticlesPage() {
             </select>
           </div>
 
-          {loading && <p className="courses-status">Loading articles...</p>}
+          {loading && <p className="courses-status">Loading articles…</p>}
           {error && <p className="courses-status courses-error">{error}</p>}
 
           {filtered.map((article) => (
