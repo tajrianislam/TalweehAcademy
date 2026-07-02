@@ -11,7 +11,6 @@ import AboutUsPage from './pages/about-us'
 import InstructorsPage from './pages/instructors'
 import InstructorDetailPage from './pages/instructor-detail'
 import ContactUsPage from './pages/contact-us'
-import TestPage from './pages/test'
 import AdminPage from './pages/admin'
 import CourseLandingPage from './pages/course-landing'
 import LessonPage from './pages/lesson'
@@ -187,7 +186,6 @@ function LandingPage() {
             <Link to="/about-us">About</Link>
             <Link to="/instructors">Instructors</Link>
             <Link to="/contact-us">Contact</Link>
-            <Link to="/test">Test</Link>
             {user?.role === 'admin' && <Link to="/admin">Admin</Link>}
           </div>
           <div className="landing-nav-actions">
@@ -429,7 +427,6 @@ function AppInner() {
         <Route path="/instructors/:slug" element={<InstructorDetailPage />} />
         <Route path="/contact-us" element={<ContactUsPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/test" element={<TestPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/courses/:slug" element={<CourseLandingPage />} />
         <Route path="/courses/:slug/lesson/:lessonId" element={<LessonPage />} />

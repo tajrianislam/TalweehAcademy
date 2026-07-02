@@ -11,7 +11,6 @@ const navLinks = [
   { label: 'About', to: '/about-us' },
   { label: 'Instructors', to: '/instructors' },
   { label: 'Contact', to: '/contact-us' },
-  { label: 'Test', to: '/test' },
 ]
 
 const footerLinks = {

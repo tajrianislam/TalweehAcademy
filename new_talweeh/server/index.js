@@ -1841,52 +1841,6 @@ app.get('/api/coupons', requireAdmin, async (req, res) => {
   }
 })
 
-// ── Test CRUD routes ─────────────────────────────────────
-// These routes intentionally use the legacy/simple `users` table for the test page.
-// Authentication uses `auth_users`. Admin-only: they expose and mutate raw table data.
-
-app.get('/api/users', requireAdmin, async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT * FROM users ORDER BY created_at DESC')
-    res.json(rows)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to fetch users' })
-  }
-})
-
-app.post('/api/users', requireAdmin, async (req, res) => {
-  const { name, email } = req.body
-  if (!name || !email) {
-    return res.status(400).json({ error: 'name and email are required' })
-  }
-  try {
-    const [result] = await pool.query(
-      'INSERT INTO users (name, email) VALUES (?, ?)',
-      [name, email]
-    )
-    const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [result.insertId])
-    res.status(201).json(rows[0])
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to create user' })
-  }
-})
-
-app.delete('/api/users/:id', requireAdmin, async (req, res) => {
-  const { id } = req.params
-  try {
-    const [result] = await pool.query('DELETE FROM users WHERE id = ?', [id])
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'User not found' })
-    }
-    res.status(204).send()
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to delete user' })
-  }
-})
-
 // ── Quran Mushaf reader (proxies Al Quran Cloud — see server/quran.js) ────
 app.use('/api/quran', quranRouter)
 
