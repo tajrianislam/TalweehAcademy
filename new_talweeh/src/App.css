@@ -1133,32 +1133,6 @@ span.hl-icon {
   }
 
   /* courses */
-  .promo-bar {
-    min-height: 46px;
-    font-size: 13px;
-  }
-
-  .main-nav {
-    grid-template-columns: 1fr;
-    gap: 14px;
-    padding: 18px;
-  }
-
-  .brand {
-    justify-content: center;
-  }
-
-  .brand img {
-    width: 240px;
-  }
-
-  .nav-links {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px 18px;
-    font-size: 15px;
-  }
-
   .hero {
     min-height: 230px;
   }
@@ -5951,4 +5925,211 @@ span.hl-icon {
 
 .admin-lesson-list li:last-child {
   border-bottom: 0;
+}
+
+/* ── Mobile responsiveness ──────────────────────────────────
+   Compact header with hamburger menu below 860px, plus stacking
+   fixes for the sections that squeeze on phones. */
+
+.nav-burger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(58, 90, 64, 0.25);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--green-dark);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+@media (max-width: 860px) {
+  /* Header: static (never cover content), single compact row + burger */
+  .site-header {
+    position: static;
+  }
+
+  .main-nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 64px;
+    padding: 8px 14px;
+  }
+
+  .brand {
+    justify-content: flex-start;
+  }
+
+  .brand img {
+    width: 170px;
+  }
+
+  .nav-burger {
+    display: inline-flex;
+  }
+
+  .nav-actions {
+    display: none;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .nav-links.open {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 60;
+    padding: 6px 0 10px;
+    background: #fff;
+    border-bottom: 1px solid rgba(58, 90, 64, 0.15);
+    box-shadow: 0 14px 28px rgba(35, 52, 38, 0.18);
+    font-size: 16px;
+    text-align: center;
+  }
+
+  .nav-links.open a {
+    padding: 12px 18px;
+    border-top: 1px solid rgba(58, 90, 64, 0.08);
+  }
+
+  .nav-links.open a:hover {
+    background: var(--green-soft);
+  }
+
+  /* Top bars: single compact lines */
+  .promo-bar {
+    min-height: 0;
+    padding: 7px 34px 7px 12px;
+    font-size: 12.5px;
+    line-height: 1.35;
+  }
+
+  .site-header-top {
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    gap: 8px;
+  }
+
+  .top-bar-links {
+    gap: 12px;
+  }
+
+  .top-bar-links a,
+  .top-bar-links .top-bar-btn {
+    white-space: nowrap;
+  }
+
+  .top-bar-social {
+    gap: 10px;
+    font-size: 0.85rem;
+  }
+
+  /* Sections that squeeze on phones */
+  .join-society-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .landing-article-grid article {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .landing-article-thumb {
+    width: 100%;
+  }
+
+  .landing-article-thumb img {
+    aspect-ratio: 16 / 9;
+  }
+
+  .youtube-grid {
+    grid-template-columns: 1fr;
+    max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .testimonial-carousel {
+    gap: 8px;
+  }
+
+  .testimonial-arrow {
+    width: 34px;
+    height: 34px;
+    font-size: 20px;
+  }
+
+  .about-intro-section,
+  .instructors-intro,
+  .instructors-grid-section,
+  .about-proud-section,
+  .about-text-section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .about-highlights-grid {
+    gap: 22px 24px;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero-arrow {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+
+  .hero-arrow-prev {
+    left: 8px;
+  }
+
+  .hero-arrow-next {
+    right: 8px;
+  }
+
+  .hero-heading {
+    font-size: clamp(1.7rem, 8vw, 2.4rem);
+  }
+
+  .hero h1 {
+    font-size: 1.7rem;
+  }
+
+  .qmr-audio-bar {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .edit-fab {
+    bottom: 14px;
+    left: 14px;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .footer-content {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .footer-seal {
+    margin: 0 auto;
+  }
 }

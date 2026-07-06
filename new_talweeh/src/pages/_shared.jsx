@@ -58,6 +58,7 @@ export function PageHeader() {
   const { user, logout, openAuthModal } = useAuth()
   const { content: g } = useContent('global')
   const [promoOpen, setPromoOpen] = useState(true)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <header className="site-header">
@@ -90,10 +91,23 @@ export function PageHeader() {
         <SocialIcons social={g.footer.social} className="top-bar-social" />
       </div>
       <nav className="main-nav" aria-label="Main navigation">
-        <Link className="brand" to="/">
+        <Link className="brand" to="/" onClick={() => setMenuOpen(false)}>
           <img src={`${ASSET}/2024/11/logo_final-scaled-600x171.webp`} alt="Talweeh Academy" />
         </Link>
-        <div className="nav-links">
+        <button
+          type="button"
+          className="nav-burger"
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((o) => !o)}
+        >
+          {menuOpen ? '✕' : '☰'}
+        </button>
+        <div
+          className={menuOpen ? 'nav-links open' : 'nav-links'}
+          onClick={() => setMenuOpen(false)}
+          role="presentation"
+        >
           {navLinks.map(({ label, to }) => (
             <Link to={to} key={label}>{label}</Link>
           ))}
