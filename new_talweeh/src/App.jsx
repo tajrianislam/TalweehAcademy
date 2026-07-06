@@ -22,65 +22,32 @@ import QuranPage from './pages/quran'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import AuthModal from './components/AuthModal'
 import { ASSET } from './constants/assets'
+import { PageHeader, PageFooter } from './pages/_shared'
+import { useContent } from './hooks/useContent'
+import { EditModeProvider, EditModeToggle, Editable } from './components/ContentEditor'
 
-const heroSlides = [
-  { heading: '2 Year Arabic Program', cta: 'Explore Arabic Program' },
-  { heading: 'Discover! Enlighten! Empower!', cta: 'Start your Journey' },
-  { heading: 'Revolutionizing your experience with Islamic Academia', cta: 'Start your Journey' },
-]
+// Red section icons (match the WP site's Elementor icon widgets).
+function MasjidIcon() {
+  return (
+    <svg className="hl-icon" viewBox="0 0 64 64" aria-hidden="true">
+      <path d="M32 6c1 6-6 9-6 16h12c0-7-7-10-6-16z" />
+      <rect x="10" y="34" width="6" height="22" rx="1" />
+      <rect x="48" y="34" width="6" height="22" rx="1" />
+      <path d="M13 24c.5 4-3 5-3 8h6c0-3-3.5-4-3-8zM51 24c.5 4-3 5-3 8h6c0-3-3.5-4-3-8z" />
+      <path d="M18 40c0-8 8-10 14-16 6 6 14 8 14 16v16H36v-8a4 4 0 0 0-8 0v8H18V40z" />
+    </svg>
+  )
+}
 
-const testimonials = [
-  {
-    quote:
-      'Learning Arabic has been a transformative experience, especially under the guidance of my respected teachers Shaykh Daud and Shaykh Omer. Their dedication to teaching not only helped me in grasping the language but also enriched my appreciation for the Ulama of the past, and respect for all seekers of knowledge.',
-    name: 'Mustafa Khan',
-    location: 'Toronto, Canada',
-  },
-  {
-    quote:
-      "Mashallah, this academy changed the way I look at online courses. The level of sharpness of the instructors is unreal. They do not shy away from mentioning nuances, grammar benefits, and differences in opinions over any text.",
-    name: 'Muhammed Ince',
-    location: 'Turkey',
-  },
-  {
-    quote:
-      'Studying with Sheikh Omer really opened my mind to see how the Islamic sciences work in tandem. I have not had a better teacher in explaining the details and intricacies of all the sciences especially in fiqh and usool ul fiqh.',
-    name: 'Mohammed Kaleelurrahman',
-    location: 'Dallas, USA',
-  },
-  {
-    quote:
-      "Having studied with Mufti Dawud for over a year, I have benefitted greatly from his teaching. His way of teaching has been easy to understand, and he challenges us to push ourselves. As a convert, I found studying with him to be very inclusive and helpful.",
-    name: 'Aldo Gjataj',
-    location: 'Ashford, England',
-  },
-  {
-    quote:
-      'What I really love about the way Sheikh teaches is that whenever we learn a new rule, we immediately apply it. The practicality in his teaching method brings life to the theory which many students find difficult to grasp.',
-    name: 'Muhammad Patel',
-    location: 'Botswana',
-  },
-]
-
-const footerLinks = {
-  Home: [
-    { label: 'About Us', to: '/about-us' },
-    { label: 'Courses', to: '/courses' },
-    { label: 'Instructors', to: '/instructors' },
-    { label: 'Services', to: '/services' },
-    { label: 'Articles', to: '/articles' },
-  ],
-  'Login/Register': [
-    { label: 'Courses', to: '/courses' },
-    { label: 'Dashboard Panel', to: '/dashboard' },
-    { label: 'Contact', to: '/contact-us' },
-  ],
-  Miscellaneous: [
-    { label: 'My Dashboard', to: '/dashboard' },
-    { label: 'Enrolled Courses', to: '/dashboard' },
-    { label: 'Purchase History', to: '/dashboard' },
-    { label: 'Terms & Conditions', to: '/p/terms-conditions' },
-  ],
+function PeopleIcon() {
+  return (
+    <svg className="hl-icon" viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="22" cy="24" r="8" />
+      <path d="M8 52c0-9 6-14 14-14s14 5 14 14v2H8v-2z" />
+      <circle cx="45" cy="22" r="6.5" />
+      <path d="M40 37.5c1.6-.7 3.3-1 5-1 7 0 12 4.4 12 12.4V50H40.6a19 19 0 0 0-.6-12.5z" />
+    </svg>
+  )
 }
 
 function FeaturedCourseCard({ course }) {
@@ -122,16 +89,25 @@ function formatLandingDate(date) {
 }
 
 function LandingPage() {
-  const { user, logout, openAuthModal } = useAuth()
+  const { content: c } = useContent('landing')
   const [slide, setSlide] = useState(0)
-  const [promoOpen, setPromoOpen] = useState(true)
+  const [testimonialPage, setTestimonialPage] = useState(0)
   const [courses, setCourses] = useState([])
   const [latestArticles, setLatestArticles] = useState([])
+
+  const heroSlides = c.heroSlides
+  const currentSlide = heroSlides[slide % heroSlides.length] || heroSlides[0]
+  const TESTIMONIALS_PER_PAGE = 3
+  const testimonialPages = Math.max(1, Math.ceil(c.testimonials.length / TESTIMONIALS_PER_PAGE))
+  const visibleTestimonials = c.testimonials.slice(
+    (testimonialPage % testimonialPages) * TESTIMONIALS_PER_PAGE,
+    (testimonialPage % testimonialPages) * TESTIMONIALS_PER_PAGE + TESTIMONIALS_PER_PAGE
+  )
 
   useEffect(() => {
     const t = setInterval(() => setSlide((s) => (s + 1) % heroSlides.length), 5000)
     return () => clearInterval(t)
-  }, [])
+  }, [heroSlides.length])
 
   useEffect(() => {
     fetch('/api/courses')
@@ -146,265 +122,254 @@ function LandingPage() {
 
   return (
     <div className="landing-shell">
-      {promoOpen && (
-        <div className="promo-bar">
-          <span>
-            Up to 50% off on Select Courses,{' '}
-            <Link to="/courses">See Now</Link>
-          </span>
-          <button type="button" aria-label="Close announcement" onClick={() => setPromoOpen(false)}>
-            ×
-          </button>
-        </div>
-      )}
-
-      <header className="landing-header">
-        <div className="landing-top">
-          {user ? (
-            <>
-              <span className="top-bar-user">Welcome, {user.name}</span>
-              <button type="button" className="top-bar-btn" onClick={logout}>Logout</button>
-              <Link to="/dashboard">Dashboard</Link>
-            </>
-          ) : (
-            <>
-              <button type="button" className="top-bar-btn" onClick={() => openAuthModal('login')}>Login as a Student</button>
-              <button type="button" className="top-bar-btn" onClick={() => openAuthModal('register')}>Register as a Student</button>
-            </>
-          )}
-          <a href="mailto:info@talweehacademy.com">info@talweehacademy.com</a>
-        </div>
-        <nav className="landing-nav">
-          <Link className="brand" to="/">
-            <img src={`${ASSET}/2024/11/logo_final-scaled-600x171.webp`} alt="Talweeh Academy" />
-          </Link>
-          <div className="landing-nav-links">
-            <Link to="/courses">Courses</Link>
-            <Link to="/services">Services</Link>
-            <Link to="/quran">Quran</Link>
-            <Link to="/articles">Articles</Link>
-            <Link to="/about-us">About</Link>
-            <Link to="/instructors">Instructors</Link>
-            <Link to="/contact-us">Contact</Link>
-            {user?.role === 'admin' && <Link to="/admin">Admin</Link>}
-          </div>
-          <div className="landing-nav-actions">
-            <button className="cart-button" type="button" aria-label="Cart">
-              ▤
-            </button>
-            <button className="journey-button" type="button">
-              My Journey
-            </button>
-          </div>
-        </nav>
-      </header>
+      <PageHeader />
 
       <main>
         {/* ── Hero Carousel ─────────────────────────── */}
-        <section className="landing-hero">
-          <div className="landing-hero-inner">
-            <p className="hero-arabic">رَبِّ زِدْنِي عِلْمًا</p>
-            <h1 key={slide} className="hero-heading">
-              {heroSlides[slide].heading}
-            </h1>
-            <img
-              className="hero-border2"
-              src={`${ASSET}/2024/08/border2.svg`}
-              alt=""
-            />
-            <a className="hero-cta-btn" href="#">
-              {heroSlides[slide].cta}
-            </a>
-          </div>
-          <div className="hero-dots">
-            {heroSlides.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                className={`hero-dot${i === slide ? ' active' : ''}`}
-                onClick={() => setSlide(i)}
-                aria-label={`Go to slide ${i + 1}`}
+        <Editable page="landing" sectionKey="heroSlides">
+          <section
+            className="landing-hero"
+            style={currentSlide.imageUrl ? {
+              backgroundImage: `linear-gradient(170deg, rgba(14, 24, 17, 0.72) 0%, rgba(30, 50, 36, 0.62) 100%), url("${currentSlide.imageUrl}")`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            } : undefined}
+          >
+            <div className="landing-hero-inner">
+              <Editable page="landing" sectionKey="hero">
+                <p className="hero-arabic">{c.hero.arabic}</p>
+              </Editable>
+              <h1 key={slide} className="hero-heading">
+                {currentSlide.heading}
+              </h1>
+              <img
+                className="hero-border2"
+                src={`${ASSET}/2024/08/border2.svg`}
+                alt=""
               />
-            ))}
-          </div>
-        </section>
+              <a className="hero-cta-btn" href={currentSlide.ctaHref || '#'}>
+                {currentSlide.cta}
+              </a>
+            </div>
+            <button
+              type="button"
+              className="hero-arrow hero-arrow-prev"
+              aria-label="Previous slide"
+              onClick={() => setSlide((s) => (s - 1 + heroSlides.length) % heroSlides.length)}
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="hero-arrow hero-arrow-next"
+              aria-label="Next slide"
+              onClick={() => setSlide((s) => (s + 1) % heroSlides.length)}
+            >
+              ›
+            </button>
+            <div className="hero-dots">
+              {heroSlides.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={`hero-dot${i === slide ? ' active' : ''}`}
+                  onClick={() => setSlide(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          </section>
+        </Editable>
 
         {/* ── Feature Highlights ───────────────────── */}
-        <section className="landing-highlights">
-          <article>
-            <h3>Arabic Program</h3>
-            <p>A step by step 2 year program to learn the Arabic language.</p>
-          </article>
-          <article>
-            <h3>Talweeh Society</h3>
-            <p>Get access to our free courses and weekly lessons.</p>
-          </article>
-          <article>
-            <h3>Authorized Instructors</h3>
-            <p>Qualified instructors navigating your path.</p>
-          </article>
-        </section>
+        <Editable page="landing" sectionKey="highlights">
+          <section className="landing-highlights">
+            {c.highlights.map((h, i) => (
+              <article key={h.title}>
+                {i === 0 ? <span className="hl-icon hl-icon-arabic">العربية</span> : i === 1 ? <MasjidIcon /> : <PeopleIcon />}
+                <h3>{h.title}</h3>
+                <p>{h.text}</p>
+              </article>
+            ))}
+          </section>
+        </Editable>
 
         {/* ── Featured Courses ─────────────────────── */}
-        <section className="landing-featured">
-          <h2>Featured Courses</h2>
-          <img className="section-divider" src={`${ASSET}/2024/08/border3.svg`} alt="" />
-          <div className="landing-featured-grid">
-            {courses.map((course) => (
-              <FeaturedCourseCard key={course.id} course={course} />
-            ))}
-          </div>
-          <Link className="green-button" to="/courses">
-            Load all Courses
-          </Link>
-        </section>
+        <Editable page="landing" sectionKey="featured">
+          <section className="landing-featured">
+            <h2>{c.featured.heading}</h2>
+            <img className="section-divider" src={`${ASSET}/2024/08/border3.svg`} alt="" />
+            <div className="landing-featured-grid">
+              {courses.map((course) => (
+                <FeaturedCourseCard key={course.id} course={course} />
+              ))}
+            </div>
+            <Link className="green-button" to="/courses">
+              {c.featured.buttonLabel}
+            </Link>
+          </section>
+        </Editable>
 
         {/* ── Latest Articles ──────────────────────── */}
+        <Editable page="landing" sectionKey="latestArticles">
         <section className="landing-articles">
-          <h2>Latest Articles</h2>
+          <h2>{c.latestArticles.heading}</h2>
           <img className="section-divider" src={`${ASSET}/2024/08/border3.svg`} alt="" />
           <div className="landing-article-grid">
             {latestArticles.map((article) => (
               <article key={article.id}>
-                <h3>{article.title}</h3>
-                <div className="article-meta">
-                  <span>{formatLandingDate(article.publishedAt)}</span>
-                  <span>{article.readTime}</span>
+                {article.imageUrl && (
+                  <Link className="landing-article-thumb" to={`/articles/${article.slug}`}>
+                    <img src={article.imageUrl} alt="" loading="lazy" />
+                  </Link>
+                )}
+                <div className="landing-article-body">
+                  <h3>{article.title}</h3>
+                  <div className="article-meta">
+                    <span>{formatLandingDate(article.publishedAt)}</span>
+                    <span>{article.readTime}</span>
+                  </div>
+                  {article.excerpt && <p>{article.excerpt}</p>}
+                  <Link to={`/articles/${article.slug}`}>Read More.....</Link>
                 </div>
-                {article.excerpt && <p>{article.excerpt}</p>}
-                <Link to={`/articles/${article.slug}`}>Read More.....</Link>
               </article>
             ))}
           </div>
           <Link className="green-button" to="/articles">
-            View Articles
+            {c.latestArticles.buttonLabel}
           </Link>
         </section>
+        </Editable>
 
         {/* ── About + Why ──────────────────────────── */}
-        <section className="landing-about-why">
-          <div className="about-why-card">
-            <h4>About Talweeh Academy</h4>
-            <img src={`${ASSET}/2024/08/border3.svg`} alt="" />
-            <p>
-              At Talweeh Academy, our mission is to elevate academic awareness across all levels,
-              offering comprehensive programs tailored for laypersons, students, and scholars. Our
-              curriculum spans a broad range of Islamic academic disciplines.
-            </p>
-            <Link className="outline-btn-green" to="/about-us">
-              About Us
-            </Link>
-          </div>
-          <div className="about-why-card">
-            <h4>Why Talweeh Academy</h4>
-            <img src={`${ASSET}/2024/08/border3.svg`} alt="" />
-            <p>
-              Our instructors possess authorizations (ijāzāt) from esteemed scholars worldwide and
-              have uniquely integrated traditional and academic methods in their quest for knowledge.
-              Join us and check out the first few lessons of our courses for free.
-            </p>
-            <a className="outline-btn-green" href="#">
-              Sign UP
-            </a>
-          </div>
-        </section>
+        <Editable page="landing" sectionKey="aboutWhy">
+          <section className="landing-about-why">
+            <div className="about-why-card">
+              <h4>{c.aboutWhy.aboutHeading}</h4>
+              <img src={`${ASSET}/2024/08/border3.svg`} alt="" />
+              <p>{c.aboutWhy.aboutText}</p>
+              <Link className="red-button" to="/about-us">
+                {c.aboutWhy.aboutButtonLabel}
+              </Link>
+            </div>
+            <div className="about-why-card">
+              <h4>{c.aboutWhy.whyHeading}</h4>
+              <img src={`${ASSET}/2024/08/border3.svg`} alt="" />
+              <p>{c.aboutWhy.whyText}</p>
+              <a className="red-button" href={c.aboutWhy.whyButtonHref || '#'}>
+                {c.aboutWhy.whyButtonLabel}
+              </a>
+            </div>
+          </section>
+        </Editable>
 
         {/* ── Join Talweeh Society ─────────────────── */}
-        <section className="landing-join-society">
-          <h3>Join Talweeh Society</h3>
-          <p>
-            Join us as we share uplifting reminders and insights from various texts, along with
-            access to our free weekly lessons.
-          </p>
-          <a className="journey-button" href="#">
-            Join Us
-          </a>
-        </section>
+        <Editable page="landing" sectionKey="joinSociety">
+          <section className="landing-join-society">
+            <div className="join-society-inner">
+              <PeopleIcon />
+              <div className="join-society-text">
+                <h3>{c.joinSociety.heading}</h3>
+                <p>{c.joinSociety.text}</p>
+              </div>
+              <a className="red-button" href={c.joinSociety.buttonHref || '#'}>
+                {c.joinSociety.buttonLabel}
+              </a>
+            </div>
+          </section>
+        </Editable>
 
         {/* ── YouTube ──────────────────────────────── */}
-        <section className="landing-youtube">
-          <h2>Youtube Videos</h2>
-          <img className="section-divider" src={`${ASSET}/2024/08/border3.svg`} alt="" />
-          <a
-            className="youtube-btn"
-            href="https://www.youtube.com/@Talweeh.Academy"
-            target="_blank"
-            rel="noreferrer"
-          >
-            ▶ Subscribe to our YouTube
-          </a>
-        </section>
+        <Editable page="landing" sectionKey="youtube">
+          <section className="landing-youtube">
+            <h2>{c.youtube.heading}</h2>
+            <img className="section-divider" src={`${ASSET}/2024/08/border3.svg`} alt="" />
+            {c.youtube.videos && c.youtube.videos.length > 0 && (
+              <div className="youtube-grid">
+                {c.youtube.videos.map((src) => (
+                  <div className="youtube-embed" key={src}>
+                    <iframe
+                      src={src}
+                      title="Talweeh Academy video"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+            <a className="youtube-btn" href={c.youtube.url} target="_blank" rel="noreferrer">
+              {c.youtube.buttonLabel}
+            </a>
+          </section>
+        </Editable>
 
         {/* ── Gift Sections ────────────────────────── */}
-        <section className="gift-section">
-          <div className="gift-card">
-            <h3>Gift a Membership</h3>
-            <img src={`${ASSET}/2024/08/border3.svg`} alt="" />
-            <p>Sponsor a course which will be given to an applicant who can&apos;t afford Talweeh Academy.</p>
-            <a className="red-button" href="#">
-              Give a Gift
-            </a>
-          </div>
-          <div className="gift-card">
-            <h3>Apply for a Gift</h3>
-            <img src={`${ASSET}/2024/08/border3.svg`} alt="" />
-            <p>If you can&apos;t afford a subscription, please submit an application for a course.</p>
-            <a className="red-button" href="#">
-              Apply for a Gift
-            </a>
-          </div>
-        </section>
+        <Editable page="landing" sectionKey="gifts">
+          <section className="gift-section">
+            {c.gifts.map((gift) => (
+              <div className="gift-card" key={gift.title}>
+                <h3>{gift.title}</h3>
+                <img src={`${ASSET}/2024/08/border3.svg`} alt="" />
+                <p>{gift.text}</p>
+                <a className="red-button" href={gift.href || '#'}>
+                  {gift.buttonLabel}
+                </a>
+              </div>
+            ))}
+          </section>
+        </Editable>
 
         {/* ── Testimonials ─────────────────────────── */}
-        <section className="landing-testimonials">
-          <h2>Testimonials</h2>
-          <img className="section-divider" src={`${ASSET}/2024/08/border3.svg`} alt="" />
-          <div className="landing-testimonial-grid">
-            {testimonials.map((item) => (
-              <article key={item.name}>
-                <p>&ldquo;{item.quote}&rdquo;</p>
-                <h4>{item.name}</h4>
-                <span>{item.location}</span>
-              </article>
-            ))}
-          </div>
-        </section>
+        <Editable page="landing" sectionKey="testimonials">
+          <section className="landing-testimonials">
+            <h2>Testimonials</h2>
+            <img className="section-divider" src={`${ASSET}/2024/08/border3.svg`} alt="" />
+            <div className="testimonial-carousel">
+              <button
+                type="button"
+                className="testimonial-arrow"
+                aria-label="Previous testimonials"
+                onClick={() => setTestimonialPage((p) => (p - 1 + testimonialPages) % testimonialPages)}
+              >
+                ‹
+              </button>
+              <div className="landing-testimonial-grid">
+                {visibleTestimonials.map((item) => (
+                  <article key={item.name}>
+                    <p>&ldquo;{item.quote}&rdquo;</p>
+                    <h4>{item.name}</h4>
+                    <span>{item.location}</span>
+                  </article>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="testimonial-arrow"
+                aria-label="Next testimonials"
+                onClick={() => setTestimonialPage((p) => (p + 1) % testimonialPages)}
+              >
+                ›
+              </button>
+            </div>
+          </section>
+        </Editable>
       </main>
 
-      {/* ── Footer ───────────────────────────────── */}
-      <footer className="site-footer">
-        <div className="footer-content">
-          <img className="footer-seal" src={`${ASSET}/2024/11/favicon_footer2.webp`} alt="Talweeh Academy seal" />
-          {Object.entries(footerLinks).map(([heading, links]) => (
-            <div className="footer-column" key={heading}>
-              <h4>{heading}</h4>
-              {links.map(({ label, to }) => (
-                <Link to={to} key={label}>{label}</Link>
-              ))}
-            </div>
-          ))}
-          <div className="footer-column">
-            <h4>Follow Us</h4>
-            <div className="social-links">
-              <a href="#" aria-label="X / Twitter">𝕏</a>
-              <a href="https://www.youtube.com/@Talweeh.Academy" aria-label="YouTube" target="_blank" rel="noreferrer">▶</a>
-              <a href="#" aria-label="Telegram">◉</a>
-              <a href="#" aria-label="Instagram">◎</a>
-              <a href="#" aria-label="WhatsApp">☎</a>
-            </div>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <span>© All rights reserved by Talweeh Academy 2025</span>
-          <button
-            type="button"
-            aria-label="Scroll to top"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          >
-            ⌃
-          </button>
-        </div>
-      </footer>
+      <PageFooter />
+    </div>
+  )
+}
+
+function NotFoundPage() {
+  return (
+    <div className="page-shell">
+      <main className="not-found-page">
+        <h1>Page not found</h1>
+        <p>The page you are looking for doesn&apos;t exist or has been moved.</p>
+        <Link className="green-button" to="/">Back to Home</Link>
+      </main>
     </div>
   )
 }
@@ -413,8 +378,9 @@ function AppInner() {
   const { modal, closeAuthModal } = useAuth()
 
   return (
-    <>
+    <EditModeProvider>
       <AuthModal open={modal.open} initialTab={modal.tab} onClose={closeAuthModal} />
+      <EditModeToggle />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/courses" element={<CoursesPage />} />
@@ -434,8 +400,9 @@ function AppInner() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/quran" element={<QuranPage />} />
         <Route path="/p/:slug" element={<GenericPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
-    </>
+    </EditModeProvider>
   )
 }
 

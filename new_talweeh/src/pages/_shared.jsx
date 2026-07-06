@@ -1,7 +1,10 @@
 /* eslint-disable react/prop-types */
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { ASSET } from '../constants/assets'
+import { useContent } from '../hooks/useContent'
+import { Editable } from '../components/ContentEditor'
 
 const navLinks = [
   { label: 'Courses', to: '/courses' },
@@ -34,30 +37,57 @@ const footerLinks = {
   ],
 }
 
+export function SocialIcons({ social, className = 'social-links' }) {
+  return (
+    <div className={className}>
+      {social.map((s) => (
+        <a
+          key={s.label}
+          href={s.href || '#'}
+          aria-label={s.label}
+          {...(s.href && s.href.startsWith('http') ? { target: '_blank', rel: 'noreferrer' } : {})}
+        >
+          {s.icon}
+        </a>
+      ))}
+    </div>
+  )
+}
+
 export function PageHeader() {
   const { user, logout, openAuthModal } = useAuth()
+  const { content: g } = useContent('global')
+  const [promoOpen, setPromoOpen] = useState(true)
 
   return (
     <header className="site-header">
-      <div className="promo-bar">
-        <span>
-          Up to 50% off on Select Courses,{' '}
-          <Link to="/courses">See Now</Link>
-        </span>
-        <button type="button" aria-label="Close announcement">×</button>
-      </div>
+      {promoOpen && (
+        <Editable page="global" sectionKey="promoBar">
+          <div className="promo-bar">
+            <span>
+              {g.promoBar.text}{' '}
+              <Link to={g.promoBar.linkTo}>{g.promoBar.linkLabel}</Link>
+            </span>
+            <button type="button" aria-label="Close announcement" onClick={() => setPromoOpen(false)}>×</button>
+          </div>
+        </Editable>
+      )}
       <div className="site-header-top">
-        {user ? (
-          <>
-            <span className="top-bar-user">Welcome, {user.name}</span>
-            <button type="button" className="top-bar-btn" onClick={logout}>Logout</button>
-          </>
-        ) : (
-          <>
-            <button type="button" className="top-bar-btn" onClick={() => openAuthModal('login')}>Login as a Student</button>
-            <button type="button" className="top-bar-btn" onClick={() => openAuthModal('register')}>Register as a Student</button>
-          </>
-        )}
+        <div className="top-bar-links">
+          {user ? (
+            <>
+              <span className="top-bar-user">Welcome, {user.name}</span>
+              <button type="button" className="top-bar-btn" onClick={logout}>Logout</button>
+              <Link to="/dashboard">Dashboard</Link>
+            </>
+          ) : (
+            <>
+              <button type="button" className="top-bar-btn" onClick={() => openAuthModal('login')}>Login as a Student</button>
+              <button type="button" className="top-bar-btn" onClick={() => openAuthModal('register')}>Register as a Student</button>
+            </>
+          )}
+        </div>
+        <SocialIcons social={g.footer.social} className="top-bar-social" />
       </div>
       <nav className="main-nav" aria-label="Main navigation">
         <Link className="brand" to="/">
@@ -98,43 +128,41 @@ export function PageHero({ title }) {
 }
 
 export function PageFooter() {
+  const { content: g } = useContent('global')
+
   return (
-    <footer className="site-footer">
-      <div className="footer-content">
-        <img
-          className="footer-seal"
-          src={`${ASSET}/2024/11/favicon_footer2.webp`}
-          alt="Talweeh Academy seal"
-        />
-        {Object.entries(footerLinks).map(([heading, links]) => (
-          <div className="footer-column" key={heading}>
-            <h4>{heading}</h4>
-            {links.map(({ label, to }) => (
-              <Link to={to} key={label}>{label}</Link>
-            ))}
-          </div>
-        ))}
-        <div className="footer-column">
-          <h4>Follow Us</h4>
-          <div className="social-links">
-            <a href="#" aria-label="X / Twitter">𝕏</a>
-            <a href="https://www.youtube.com/@Talweeh.Academy" aria-label="YouTube" target="_blank" rel="noreferrer">▶</a>
-            <a href="#" aria-label="Telegram">◉</a>
-            <a href="#" aria-label="Instagram">◎</a>
-            <a href="#" aria-label="WhatsApp">☎</a>
+    <Editable page="global" sectionKey="footer">
+      <footer className="site-footer">
+        <div className="footer-content">
+          <img
+            className="footer-seal"
+            src={`${ASSET}/2024/11/favicon_footer2.webp`}
+            alt="Talweeh Academy seal"
+          />
+          {Object.entries(footerLinks).map(([heading, links]) => (
+            <div className="footer-column" key={heading}>
+              <h4>{heading}</h4>
+              {links.map(({ label, to }) => (
+                <Link to={to} key={label}>{label}</Link>
+              ))}
+            </div>
+          ))}
+          <div className="footer-column">
+            <h4>Follow Us</h4>
+            <SocialIcons social={g.footer.social} />
           </div>
         </div>
-      </div>
-      <div className="footer-bottom">
-        <span>© All rights reserved by Talweeh Academy 2025</span>
-        <button
-          type="button"
-          aria-label="Scroll to top"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        >
-          ⌃
-        </button>
-      </div>
-    </footer>
+        <div className="footer-bottom">
+          <span>{g.footer.copyright}</span>
+          <button
+            type="button"
+            aria-label="Scroll to top"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            ⌃
+          </button>
+        </div>
+      </footer>
+    </Editable>
   )
 }

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { PageHeader, PageFooter } from './_shared'
 import {
-  InstructorsAdmin, ServicesAdmin, ArticlesAdmin, PagesAdmin, ContactInbox, CommerceAdmin,
+  InstructorsAdmin, ServicesAdmin, ArticlesAdmin, PagesAdmin, ContactInbox, CommerceAdmin, SiteContentAdmin,
 } from '../components/AdminContentSections'
 
 const CATEGORIES = [
@@ -720,6 +720,10 @@ export default function AdminPage() {
               <span className="admin-nav-icon">📝</span>
               Articles
             </button>
+            <button type="button" className={`admin-nav-btn${tab === 'siteContent' ? ' active' : ''}`} onClick={() => setTab('siteContent')}>
+              <span className="admin-nav-icon">🖋</span>
+              Site Content
+            </button>
             <button type="button" className={`admin-nav-btn${tab === 'pages' ? ' active' : ''}`} onClick={() => setTab('pages')}>
               <span className="admin-nav-icon">📄</span>
               Pages
@@ -747,6 +751,7 @@ export default function AdminPage() {
             {tab === 'instructors' && <InstructorsAdmin />}
             {tab === 'services' && <ServicesAdmin />}
             {tab === 'articles' && <ArticlesAdmin />}
+            {tab === 'siteContent' && <SiteContentAdmin />}
             {tab === 'pages' && <PagesAdmin />}
             {tab === 'commerce' && <CommerceAdmin />}
             {tab === 'contact' && <ContactInbox />}

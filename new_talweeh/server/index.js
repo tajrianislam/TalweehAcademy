@@ -10,6 +10,8 @@ const jwt = require('jsonwebtoken')
 const rateLimit = require('express-rate-limit')
 const { sendPasswordResetEmail, sendContactNotificationEmail } = require('./email')
 const axios = require('axios')
+const multer = require('multer')
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3')
 const quranRouter = require('./quran')
 
 const app = express()
@@ -37,6 +39,30 @@ if (MEDIA_BASE_URL) {
     res.redirect(302, `${MEDIA_BASE_URL.replace(/\/$/, '')}${req.originalUrl}`)
   })
 }
+
+// Cloudflare R2 (S3-compatible) — admin image uploads. Gated on env vars so
+// the endpoint degrades to 501 when uploads aren't configured.
+const R2_BUCKET = process.env.R2_BUCKET
+const r2 = (process.env.R2_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && R2_BUCKET)
+  ? new S3Client({
+      region: 'auto',
+      endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+      },
+    })
+  : null
+
+const UPLOAD_MIME_EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' }
+const uploadImage = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    // Images only; no SVG (can carry scripts).
+    cb(null, Boolean(UPLOAD_MIME_EXT[file.mimetype]))
+  },
+})
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -1647,6 +1673,125 @@ app.put('/api/pages/:slug', requireAdmin, async (req, res) => {
   }
 })
 
+// ── Site content (admin-editable sections; defaults live client-side) ──
+
+// Content values are structured JSON, never HTML: leaves must be plain
+// strings/numbers/booleans, and link-ish keys must use safe URL schemes.
+// The client renders every leaf as a React text node, so this stays XSS-inert.
+const CONTENT_MAX_BYTES = 100 * 1024
+const CONTENT_LINK_KEY = /(url|href|link|src|to)$/i
+const CONTENT_SAFE_LINK = /^(https?:\/\/|\/|mailto:|tel:|#)/
+
+function validateContentValue(value, path = '') {
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return null
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      const err = validateContentValue(value[i], `${path}[${i}]`)
+      if (err) return err
+    }
+    return null
+  }
+  if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+    for (const [key, v] of Object.entries(value)) {
+      if (CONTENT_LINK_KEY.test(key) && typeof v === 'string' && v !== '' && !CONTENT_SAFE_LINK.test(v.trim())) {
+        return `unsafe link value at ${path}.${key}`
+      }
+      const err = validateContentValue(v, path ? `${path}.${key}` : key)
+      if (err) return err
+    }
+    return null
+  }
+  return `unsupported value type at ${path || 'root'}`
+}
+
+app.get('/api/content/:page', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT section_key, content_json FROM site_content WHERE page_slug = ?',
+      [req.params.page]
+    )
+    const sections = {}
+    for (const row of rows) {
+      try {
+        sections[row.section_key] = JSON.parse(row.content_json)
+      } catch {
+        // Skip a corrupt row rather than break the whole page.
+        console.error(`Invalid content_json for ${req.params.page}/${row.section_key}`)
+      }
+    }
+    res.json({ sections })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch content' })
+  }
+})
+
+app.put('/api/content/:page/:key', requireAdmin, async (req, res) => {
+  const { content } = req.body
+  if (content === undefined || content === null || typeof content !== 'object') {
+    return res.status(400).json({ error: 'content must be an object or array' })
+  }
+  const validationError = validateContentValue(content)
+  if (validationError) return res.status(400).json({ error: validationError })
+  const serialized = JSON.stringify(content)
+  if (Buffer.byteLength(serialized, 'utf8') > CONTENT_MAX_BYTES) {
+    return res.status(400).json({ error: 'content too large (max 100KB)' })
+  }
+  try {
+    await pool.query(
+      `INSERT INTO site_content (page_slug, section_key, content_json) VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE content_json = VALUES(content_json)`,
+      [req.params.page, req.params.key, serialized]
+    )
+    res.json({ page: req.params.page, key: req.params.key, content })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to save content' })
+  }
+})
+
+app.delete('/api/content/:page/:key', requireAdmin, async (req, res) => {
+  try {
+    await pool.query(
+      'DELETE FROM site_content WHERE page_slug = ? AND section_key = ?',
+      [req.params.page, req.params.key]
+    )
+    res.status(204).end()
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to reset content' })
+  }
+})
+
+// Admin image upload -> R2. Returns the public URL to use in content fields.
+app.post('/api/upload', requireAdmin, uploadImage.single('file'), async (req, res) => {
+  if (!r2) return res.status(501).json({ error: 'Uploads are not configured on this server.' })
+  if (!req.file) return res.status(400).json({ error: 'No image file received (jpeg/png/webp/gif, max 5MB).' })
+  try {
+    const ext = UPLOAD_MIME_EXT[req.file.mimetype]
+    const now = new Date()
+    const yyyy = now.getFullYear()
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    const base = path.basename(req.file.originalname || 'image', path.extname(req.file.originalname || ''))
+      .toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'image'
+    const key = `wp-content/uploads/${yyyy}/${mm}/${base}-${crypto.randomBytes(3).toString('hex')}.${ext}`
+    await r2.send(new PutObjectCommand({
+      Bucket: R2_BUCKET,
+      Key: key,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+      CacheControl: 'public, max-age=31536000, immutable',
+    }))
+    // Absolute public URL: new uploads exist only in R2 (not in local public/),
+    // so a relative path would 404 in dev where Vite serves static files.
+    const url = MEDIA_BASE_URL ? `${MEDIA_BASE_URL.replace(/\/$/, '')}/${key}` : `/${key}`
+    res.json({ url, key })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Upload failed.' })
+  }
+})
+
 // ── Article admin CRUD ─────────────────────────────────────
 
 app.post('/api/articles', requireAdmin, async (req, res) => {
@@ -2121,6 +2266,22 @@ async function ensurePagesSchema() {
   `)
 }
 
+// Admin-editable site content (hero slides, testimonials, page copy).
+// Stores JSON overrides per (page, section); defaults live in the frontend
+// registry (src/content/siteContent.js), so an empty table = stock site.
+async function ensureSiteContentSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS site_content (
+      id           INT AUTO_INCREMENT PRIMARY KEY,
+      page_slug    VARCHAR(100) NOT NULL,
+      section_key  VARCHAR(100) NOT NULL,
+      content_json LONGTEXT NOT NULL,
+      updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      UNIQUE KEY uq_site_content (page_slug, section_key)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `)
+}
+
 // ── Commerce schema (historical data; no live checkout) ───
 
 async function ensureCommerceSchema() {
@@ -2260,6 +2421,7 @@ async function startServer() {
     await ensureInstructorsSchema()
     await ensureServicesSchema()
     await ensurePagesSchema()
+    await ensureSiteContentSchema()
     await ensureCommerceSchema()
     await ensureContactSchema()
     app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`))

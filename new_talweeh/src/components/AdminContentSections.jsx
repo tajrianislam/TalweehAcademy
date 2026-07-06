@@ -1,5 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from 'react'
+import { CONTENT_REGISTRY } from '../content/siteContent'
+import { SectionEditorModal } from './ContentEditor'
 
 // Small helper for authenticated JSON requests.
 async function api(url, options = {}) {
@@ -465,5 +467,52 @@ export function CommerceAdmin() {
         </>
       )}
     </div>
+  )
+}
+
+// ── Site Content (in-place editable sections, dashboard fallback) ──
+const PAGE_LABELS = {
+  global: 'Header & Footer (all pages)',
+  landing: 'Home Page',
+  about: 'About Us',
+  contact: 'Contact Us',
+}
+
+export function SiteContentAdmin() {
+  const [editing, setEditing] = useState(null) // { page, sectionKey }
+
+  return (
+    <section>
+      <SectionHeader
+        icon="🖋"
+        title="Site Content"
+        subtitle="Edit the text and images shown on the main pages. Tip: you can also edit in place — browse the site and press the ✎ Edit button in the corner."
+      />
+      {Object.entries(CONTENT_REGISTRY).map(([page, sections]) => (
+        <div key={page} className="admin-section-spaced">
+          <h3 className="admin-subheading">{PAGE_LABELS[page] || page}</h3>
+          <div className="site-content-grid">
+            {Object.entries(sections).map(([key, section]) => (
+              <button
+                key={key}
+                type="button"
+                className="site-content-card"
+                onClick={() => setEditing({ page, sectionKey: key })}
+              >
+                <strong>{section.label}</strong>
+                <span>✎ Edit</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+      {editing && (
+        <SectionEditorModal
+          page={editing.page}
+          sectionKey={editing.sectionKey}
+          onClose={() => setEditing(null)}
+        />
+      )}
+    </section>
   )
 }
