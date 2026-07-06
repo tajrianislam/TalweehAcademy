@@ -13,6 +13,15 @@ const axios = require('axios')
 const multer = require('multer')
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3')
 const quranRouter = require('./quran')
+const {
+  stripe,
+  MEMBERSHIP_PRICE_ID,
+  MEMBERSHIP_NAME,
+  getOrCreateStripeCustomer,
+  userHasActiveMembership,
+  fulfillCheckoutSession,
+  createWebhookHandler,
+} = require('./stripe')
 
 const app = express()
 
@@ -26,6 +35,12 @@ app.use(cors({
   origin: process.env.FRONTEND_ORIGIN,
   credentials: true,
 }))
+// Stripe webhook needs the raw body for signature verification, so it must be
+// registered before the global JSON body parser.
+app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), (req, res, next) => {
+  stripeWebhookHandler(req, res, next)
+})
+
 app.use(express.json())
 app.use(cookieParser())
 
@@ -71,6 +86,8 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
 })
+
+const stripeWebhookHandler = createWebhookHandler(pool)
 
 const JWT_SECRET = process.env.JWT_SECRET
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7 days
@@ -793,6 +810,110 @@ app.post('/api/courses', requireAdmin, async (req, res) => {
     console.error(err)
     if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'A course with this title already exists' })
     res.status(500).json({ error: 'Failed to create course' })
+  }
+})
+
+// Partial course update (edit fields / toggle Hidden status).
+app.put('/api/courses/:id', requireAdmin, async (req, res) => {
+  const courseId = Number(req.params.id)
+  if (!Number.isInteger(courseId) || courseId <= 0) return res.status(400).json({ error: 'Invalid course id' })
+  const ALLOWED = ['title', 'description', 'price', 'cadence', 'status', 'category',
+    'instructor_name', 'instructor_avatar_url', 'thumbnail_url', 'level']
+  const updates = []
+  const values = []
+  for (const field of ALLOWED) {
+    if (field in req.body) {
+      updates.push(`${field} = ?`)
+      values.push(req.body[field])
+    }
+  }
+  if (updates.length === 0) return res.status(400).json({ error: 'No editable fields provided' })
+  if ('title' in req.body) {
+    if (!req.body.title) return res.status(400).json({ error: 'title cannot be empty' })
+    updates.push('slug = ?')
+    values.push(slugify(req.body.title))
+  }
+  try {
+    const [result] = await pool.query(
+      `UPDATE courses SET ${updates.join(', ')} WHERE id = ?`,
+      [...values, courseId]
+    )
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Course not found' })
+    const [rows] = await pool.query('SELECT * FROM courses WHERE id = ?', [courseId])
+    res.json(rows[0])
+  } catch (err) {
+    console.error(err)
+    if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'A course with this title already exists' })
+    res.status(500).json({ error: 'Failed to update course' })
+  }
+})
+
+// Permanently delete a course and everything hanging off it: lessons, their
+// quizzes (questions/options/attempts), student progress/notes/comments, and
+// enrollments. Runs in a transaction so a failure never leaves orphans.
+app.delete('/api/courses/:id', requireAdmin, async (req, res) => {
+  const courseId = Number(req.params.id)
+  if (!Number.isInteger(courseId) || courseId <= 0) return res.status(400).json({ error: 'Invalid course id' })
+  const conn = await pool.getConnection()
+  try {
+    await conn.beginTransaction()
+    const [courses] = await conn.query('SELECT id FROM courses WHERE id = ?', [courseId])
+    if (courses.length === 0) {
+      await conn.rollback()
+      return res.status(404).json({ error: 'Course not found' })
+    }
+    const lessonSub = 'SELECT id FROM lessons WHERE course_id = ?'
+    const quizSub = `SELECT id FROM quizzes WHERE lesson_id IN (${lessonSub})`
+    await conn.query(`DELETE FROM quiz_options WHERE question_id IN (SELECT id FROM quiz_questions WHERE quiz_id IN (${quizSub}))`, [courseId])
+    await conn.query(`DELETE FROM quiz_attempts WHERE quiz_id IN (${quizSub})`, [courseId])
+    await conn.query(`DELETE FROM quiz_questions WHERE quiz_id IN (${quizSub})`, [courseId])
+    await conn.query(`DELETE FROM quizzes WHERE lesson_id IN (${lessonSub})`, [courseId])
+    await conn.query(`DELETE FROM lesson_progress WHERE lesson_id IN (${lessonSub})`, [courseId])
+    await conn.query(`DELETE FROM lesson_notes WHERE lesson_id IN (${lessonSub})`, [courseId])
+    await conn.query(`DELETE FROM lesson_comments WHERE lesson_id IN (${lessonSub})`, [courseId])
+    await conn.query('DELETE FROM lessons WHERE course_id = ?', [courseId])
+    await conn.query('DELETE FROM enrollments WHERE course_id = ?', [courseId])
+    await conn.query('DELETE FROM courses WHERE id = ?', [courseId])
+    await conn.commit()
+    res.status(204).end()
+  } catch (err) {
+    await conn.rollback()
+    console.error(err)
+    res.status(500).json({ error: 'Failed to delete course' })
+  } finally {
+    conn.release()
+  }
+})
+
+// Delete a single lesson (and its quiz, attempts, and student records).
+app.delete('/api/lessons/:id', requireAdmin, async (req, res) => {
+  const lessonId = Number(req.params.id)
+  if (!Number.isInteger(lessonId) || lessonId <= 0) return res.status(400).json({ error: 'Invalid lesson id' })
+  const conn = await pool.getConnection()
+  try {
+    await conn.beginTransaction()
+    const [lessons] = await conn.query('SELECT id FROM lessons WHERE id = ?', [lessonId])
+    if (lessons.length === 0) {
+      await conn.rollback()
+      return res.status(404).json({ error: 'Lesson not found' })
+    }
+    const quizSub = 'SELECT id FROM quizzes WHERE lesson_id = ?'
+    await conn.query(`DELETE FROM quiz_options WHERE question_id IN (SELECT id FROM quiz_questions WHERE quiz_id IN (${quizSub}))`, [lessonId])
+    await conn.query(`DELETE FROM quiz_attempts WHERE quiz_id IN (${quizSub})`, [lessonId])
+    await conn.query(`DELETE FROM quiz_questions WHERE quiz_id IN (${quizSub})`, [lessonId])
+    await conn.query('DELETE FROM quizzes WHERE lesson_id = ?', [lessonId])
+    await conn.query('DELETE FROM lesson_progress WHERE lesson_id = ?', [lessonId])
+    await conn.query('DELETE FROM lesson_notes WHERE lesson_id = ?', [lessonId])
+    await conn.query('DELETE FROM lesson_comments WHERE lesson_id = ?', [lessonId])
+    await conn.query('DELETE FROM lessons WHERE id = ?', [lessonId])
+    await conn.commit()
+    res.status(204).end()
+  } catch (err) {
+    await conn.rollback()
+    console.error(err)
+    res.status(500).json({ error: 'Failed to delete lesson' })
+  } finally {
+    conn.release()
   }
 })
 

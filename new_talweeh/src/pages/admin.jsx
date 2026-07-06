@@ -437,11 +437,77 @@ function AddLessonForm({ course, onDone }) {
 // ── Manage Courses Section ──────────────────────────────────
 export function ManageCoursesSection({ courses, onRefresh }) {
   const [expandedId, setExpandedId] = useState(null)
+  const [busyId, setBusyId] = useState(null)
+  const [msg, setMsg] = useState(null)
 
   const badgeClass = (status) => {
     if (status === 'Online') return 'online'
     if (status === 'Completed') return 'completed'
+    if (status === 'Hidden') return 'hidden'
     return 'coming'
+  }
+
+  async function toggleHidden(course) {
+    const nextStatus = course.status === 'Hidden' ? 'Online' : 'Hidden'
+    setBusyId(course.id)
+    setMsg(null)
+    try {
+      const res = await fetch(`/api/courses/${course.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status: nextStatus }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Failed to update course')
+      setMsg({ type: 'success', text: `"${course.title}" is now ${nextStatus === 'Hidden' ? 'hidden from students' : 'visible (Online)'}.` })
+      onRefresh()
+    } catch (err) {
+      setMsg({ type: 'error', text: err.message })
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function deleteCourse(course) {
+    const enrollNote = 'This permanently deletes the course, its lessons, quizzes, student progress, and enrollments.'
+    const typed = window.prompt(`${enrollNote}\n\nType the course title to confirm:\n${course.title}`)
+    if (typed === null) return
+    if (typed.trim() !== course.title) {
+      setMsg({ type: 'error', text: 'Title did not match — nothing was deleted.' })
+      return
+    }
+    setBusyId(course.id)
+    setMsg(null)
+    try {
+      const res = await fetch(`/api/courses/${course.id}`, { method: 'DELETE', credentials: 'include' })
+      if (!res.ok && res.status !== 204) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to delete course')
+      }
+      setMsg({ type: 'success', text: `"${course.title}" was permanently deleted.` })
+      onRefresh()
+    } catch (err) {
+      setMsg({ type: 'error', text: err.message })
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function deleteLesson(course, lesson) {
+    if (!window.confirm(`Delete lesson "${lesson.title}" (and its quiz + student progress)?`)) return
+    setMsg(null)
+    try {
+      const res = await fetch(`/api/lessons/${lesson.id}`, { method: 'DELETE', credentials: 'include' })
+      if (!res.ok && res.status !== 204) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to delete lesson')
+      }
+      setMsg({ type: 'success', text: `Lesson "${lesson.title}" deleted.` })
+      onRefresh()
+    } catch (err) {
+      setMsg({ type: 'error', text: err.message })
+    }
   }
 
   return (
@@ -450,9 +516,10 @@ export function ManageCoursesSection({ courses, onRefresh }) {
         <div className="admin-section-icon">☰</div>
         <div>
           <h2>Manage Courses</h2>
-          <p>Add lessons and quizzes to your existing courses</p>
+          <p>Add lessons and quizzes, hide courses from students, or delete them</p>
         </div>
       </div>
+      {msg && <p className={msg.type === 'error' ? 'admin-msg error' : 'admin-msg success'}>{msg.text}</p>}
       {courses.length === 0 && <p className="courses-status">No courses yet. Create one first.</p>}
       <div className="admin-course-list">
         {courses.map((course) => (
@@ -471,19 +538,51 @@ export function ManageCoursesSection({ courses, onRefresh }) {
                   </div>
                 </div>
               </div>
-              <button
-                type="button"
-                className="outline-btn-green"
-                onClick={() => setExpandedId(expandedId === course.id ? null : course.id)}
-              >
-                {expandedId === course.id ? '✕ Cancel' : '+ Add Lesson'}
-              </button>
+              <div className="admin-course-actions">
+                <button
+                  type="button"
+                  className="outline-btn-green"
+                  onClick={() => setExpandedId(expandedId === course.id ? null : course.id)}
+                >
+                  {expandedId === course.id ? '✕ Close' : 'Manage'}
+                </button>
+                <button
+                  type="button"
+                  className="admin-hide-btn"
+                  disabled={busyId === course.id}
+                  onClick={() => toggleHidden(course)}
+                >
+                  {course.status === 'Hidden' ? 'Unhide' : 'Hide'}
+                </button>
+                <button
+                  type="button"
+                  className="qb-remove-btn"
+                  disabled={busyId === course.id}
+                  onClick={() => deleteCourse(course)}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
             {expandedId === course.id && (
-              <AddLessonForm
-                course={course}
-                onDone={() => { setExpandedId(null); onRefresh() }}
-              />
+              <>
+                {(course.lessons?.length ?? 0) > 0 && (
+                  <ul className="admin-lesson-list">
+                    {course.lessons.map((lesson) => (
+                      <li key={lesson.id}>
+                        <span>{lesson.title}{lesson.has_quiz ? ' · quiz' : ''}</span>
+                        <button type="button" className="qb-remove-btn" onClick={() => deleteLesson(course, lesson)}>
+                          Delete
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <AddLessonForm
+                  course={course}
+                  onDone={() => { setExpandedId(null); onRefresh() }}
+                />
+              </>
             )}
           </div>
         ))}

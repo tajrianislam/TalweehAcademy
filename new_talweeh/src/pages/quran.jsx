@@ -418,6 +418,22 @@ export default function QuranPage() {
       return
     }
 
+    // Some reciters' files carry recorded silence between an ayah's end and
+    // the next ayah's start (a hole between consecutive timestamps). Skip
+    // over it so verses flow together without a pause.
+    for (let i = 0; i < track.timestamps.length - 1; i++) {
+      const cur = track.timestamps[i]
+      const next = track.timestamps[i + 1]
+      if (ms >= cur.to && ms < next.from) {
+        if (stopAtMsRef.current === null || next.from < stopAtMsRef.current) {
+          el.currentTime = next.from / 1000
+          updateCurrentAyah(next.from)
+        }
+        return
+      }
+      if (ms < cur.to) break
+    }
+
     updateCurrentAyah(ms)
   }
 
