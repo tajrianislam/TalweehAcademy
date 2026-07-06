@@ -1763,6 +1763,45 @@ app.delete('/api/content/:page/:key', requireAdmin, async (req, res) => {
   }
 })
 
+// Aggregate counts + recent activity for the admin dashboard widgets.
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+  try {
+    const [[students]] = await pool.query('SELECT COUNT(*) AS n FROM auth_users')
+    const [[enrollments]] = await pool.query('SELECT COUNT(*) AS n FROM enrollments')
+    const [[courses]] = await pool.query("SELECT COUNT(*) AS n FROM courses WHERE status <> 'Hidden'")
+    const [[articles]] = await pool.query('SELECT COUNT(*) AS n FROM articles')
+    const [[instructors]] = await pool.query('SELECT COUNT(*) AS n FROM instructors')
+    const [[services]] = await pool.query('SELECT COUNT(*) AS n FROM services')
+    const [[messages]] = await pool.query('SELECT COUNT(*) AS n FROM contact_messages')
+    const [[messagesWeek]] = await pool.query(
+      'SELECT COUNT(*) AS n FROM contact_messages WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)'
+    )
+    const [recentUsers] = await pool.query(
+      'SELECT name, username, created_at FROM auth_users ORDER BY created_at DESC LIMIT 5'
+    )
+    const [recentMessages] = await pool.query(
+      'SELECT name, email, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 5'
+    )
+    res.json({
+      counts: {
+        students: students.n,
+        enrollments: enrollments.n,
+        courses: courses.n,
+        articles: articles.n,
+        instructors: instructors.n,
+        services: services.n,
+        messages: messages.n,
+        messagesThisWeek: messagesWeek.n,
+      },
+      recentUsers,
+      recentMessages,
+    })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch stats' })
+  }
+})
+
 // Admin image upload -> R2. Returns the public URL to use in content fields.
 app.post('/api/upload', requireAdmin, uploadImage.single('file'), async (req, res) => {
   if (!r2) return res.status(501).json({ error: 'Uploads are not configured on this server.' })

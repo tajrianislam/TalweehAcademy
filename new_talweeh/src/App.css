@@ -5444,3 +5444,302 @@ span.hl-icon {
   opacity: 0.6;
   cursor: default;
 }
+
+/* ── Elementor Dashboard (wp-admin replica) ─────────────────── */
+
+.wpadmin-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f0f0f1;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  font-size: 13px;
+  color: #3c434a;
+}
+
+.wpadmin-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  padding: 0 12px;
+  background: #1d2327;
+  color: #f0f0f1;
+  font-size: 13px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.wpadmin-topbar-left,
+.wpadmin-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.wpadmin-site-link {
+  color: #f0f0f1;
+  font-weight: 400;
+}
+
+.wpadmin-site-link:hover,
+.wpadmin-topbar-btn:hover {
+  color: #72aee6;
+}
+
+.wpadmin-topbar-btn {
+  background: none;
+  border: none;
+  color: #f0f0f1;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.wpadmin-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2271b1;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.wpadmin-body {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+}
+
+.wpadmin-sidebar {
+  width: 160px;
+  flex-shrink: 0;
+  background: #1d2327;
+  padding: 8px 0 60px;
+  display: flex;
+  flex-direction: column;
+}
+
+.wpadmin-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  background: none;
+  color: #c3c4c7;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.wpadmin-menu-item:hover {
+  color: #72aee6;
+}
+
+.wpadmin-menu-item.active {
+  background: #2271b1;
+  color: #fff;
+  position: relative;
+}
+
+.wpadmin-menu-item.active::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: #f0f0f1;
+}
+
+.wpadmin-menu-icon {
+  width: 18px;
+  text-align: center;
+  font-size: 15px;
+  filter: grayscale(100%);
+  opacity: 0.85;
+}
+
+.wpadmin-menu-item.active .wpadmin-menu-icon {
+  filter: none;
+  opacity: 1;
+}
+
+.wpadmin-content {
+  flex: 1;
+  min-width: 0;
+  padding: 24px 28px 60px;
+}
+
+.wpadmin-title {
+  margin: 0 0 20px;
+  font-size: 23px;
+  font-weight: 400;
+  color: #1d2327;
+  line-height: 1.3;
+}
+
+.wpadmin-widgets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.wpadmin-box {
+  background: #fff;
+  border: 1px solid #c3c4c7;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.wpadmin-box-head {
+  padding: 10px 14px;
+  border-bottom: 1px solid #c3c4c7;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.wpadmin-box-body {
+  padding: 14px;
+}
+
+.wpadmin-glance {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+
+.wpadmin-glance-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.wpadmin-glance-item strong {
+  font-size: 15px;
+  color: #2271b1;
+}
+
+.wpadmin-glance-icon {
+  font-size: 16px;
+}
+
+.wpadmin-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wpadmin-links a,
+.wpadmin-links button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #2271b1;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.wpadmin-links a:hover,
+.wpadmin-links button:hover {
+  color: #135e96;
+  text-decoration: underline;
+}
+
+.wpadmin-activity {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.wpadmin-activity li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f1;
+  font-size: 13px;
+}
+
+.wpadmin-activity li:last-child {
+  border-bottom: 0;
+}
+
+.wpadmin-activity li span:last-child {
+  margin-left: auto;
+  color: #787c82;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.wpadmin-muted {
+  color: #787c82;
+}
+
+.wpadmin-note {
+  margin: 12px 0 0;
+  color: #50575e;
+  font-size: 13px;
+}
+
+.wpadmin-panel .wpadmin-note {
+  margin: 0 0 16px;
+}
+
+.wpadmin-note a {
+  color: #2271b1;
+  text-decoration: underline;
+}
+
+.wpadmin-loading {
+  color: #787c82;
+}
+
+.wpadmin-panel {
+  background: #fff;
+  border: 1px solid #c3c4c7;
+  padding: 20px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.wpadmin-hr {
+  margin: 28px 0;
+  border: 0;
+  border-top: 1px solid #e0e0e0;
+}
+
+@media (max-width: 960px) {
+  .wpadmin-sidebar {
+    width: 46px;
+  }
+
+  .wpadmin-menu-label {
+    display: none;
+  }
+
+  .wpadmin-content {
+    padding: 18px 14px 60px;
+  }
+}
+
+.wpadmin-activity strong {
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

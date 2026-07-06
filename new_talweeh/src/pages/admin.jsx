@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { PageHeader, PageFooter } from './_shared'
 import {
@@ -117,7 +117,7 @@ function CoursePreviewModal({ form, onClose }) {
 }
 
 // ── Create Course Section ──────────────────────────────────
-function CreateCourseSection({ onCreated }) {
+export function CreateCourseSection({ onCreated }) {
   const [form, setForm] = useState(BLANK_COURSE)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState(null)
@@ -435,7 +435,7 @@ function AddLessonForm({ course, onDone }) {
 }
 
 // ── Manage Courses Section ──────────────────────────────────
-function ManageCoursesSection({ courses, onRefresh }) {
+export function ManageCoursesSection({ courses, onRefresh }) {
   const [expandedId, setExpandedId] = useState(null)
 
   const badgeClass = (status) => {
@@ -493,7 +493,7 @@ function ManageCoursesSection({ courses, onRefresh }) {
 }
 
 // ── Manage Enrollments Section ──────────────────────────────
-function ManageEnrollmentsSection({ courses }) {
+export function ManageEnrollmentsSection({ courses }) {
   const [enrollments, setEnrollments] = useState([])
   const [loadingList, setLoadingList] = useState(true)
   const [email, setEmail] = useState('')
@@ -684,6 +684,10 @@ export default function AdminPage() {
         <div className="admin-layout">
           <nav className="admin-sidebar">
             <span className="admin-sidebar-label">Navigation</span>
+            <Link className="admin-nav-btn" to="/elementor-dashboard">
+              <span className="admin-nav-icon">🎨</span>
+              Elementor Dashboard
+            </Link>
             <button
               type="button"
               className={`admin-nav-btn${tab === 'create' ? ' active' : ''}`}

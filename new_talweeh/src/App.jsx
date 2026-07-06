@@ -12,6 +12,7 @@ import InstructorsPage from './pages/instructors'
 import InstructorDetailPage from './pages/instructor-detail'
 import ContactUsPage from './pages/contact-us'
 import AdminPage from './pages/admin'
+import ElementorDashboardPage from './pages/elementor-dashboard'
 import CourseLandingPage from './pages/course-landing'
 import LessonPage from './pages/lesson'
 import LessonQuizPage from './pages/lesson-quiz'
@@ -394,6 +395,7 @@ function AppInner() {
         <Route path="/contact-us" element={<ContactUsPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/elementor-dashboard" element={<ElementorDashboardPage />} />
         <Route path="/courses/:slug" element={<CourseLandingPage />} />
         <Route path="/courses/:slug/lesson/:lessonId" element={<LessonPage />} />
         <Route path="/courses/:slug/lesson/:lessonId/quiz" element={<LessonQuizPage />} />

@@ -10,6 +10,7 @@
 //   src/content/siteContent.js. Handles object sections, lists of objects
 //   (add / remove / reorder), and lists of plain strings.
 import { createContext, useContext, useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../hooks/useContent'
 import { CONTENT_REGISTRY } from '../content/siteContent'
@@ -34,7 +35,10 @@ export function useEditMode() {
 export function EditModeToggle() {
   const { user } = useAuth()
   const { editMode, setEditMode } = useEditMode()
+  const { pathname } = useLocation()
   if (user?.role !== 'admin') return null
+  // The FAB edits the public site in place — hide it on admin surfaces.
+  if (pathname.startsWith('/admin') || pathname.startsWith('/elementor-dashboard')) return null
   return (
     <button
       type="button"
