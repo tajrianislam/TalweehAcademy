@@ -5743,3 +5743,146 @@ span.hl-icon {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── Quran reader: IndoPak script, word-by-word, range playback ── */
+
+@font-face {
+  font-family: 'Talweeh IndoPak';
+  src: url('/fonts/indopak-nastaleeq.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+
+.qmr-arabic--indopak {
+  font-family: 'Talweeh IndoPak', 'Talweeh Naskh', serif;
+  line-height: 2.3;
+}
+
+.qmr-script-toggle {
+  display: inline-flex;
+  border: 1px solid rgba(58, 90, 64, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.qmr-script-toggle button {
+  padding: 7px 16px;
+  border: none;
+  background: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.qmr-script-toggle button + button {
+  border-left: 1px solid rgba(58, 90, 64, 0.2);
+}
+
+.qmr-script-toggle button.active {
+  background: var(--green);
+  color: #fff;
+}
+
+.qmr-word {
+  position: relative;
+  cursor: pointer;
+  border-radius: 5px;
+  padding: 0 1px;
+  transition: background 120ms ease;
+  outline: none;
+}
+
+.qmr-word:hover,
+.qmr-word:focus {
+  background: rgba(224, 159, 62, 0.28);
+}
+
+.qmr-word:hover::after,
+.qmr-word:focus::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 45;
+  width: max-content;
+  max-width: 240px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: var(--green-dark);
+  color: #fff;
+  font-family: 'Talweeh Epilogue', Georgia, serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: center;
+  direction: ltr;
+  white-space: pre-line;
+  pointer-events: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+.qmr-word:hover::before,
+.qmr-word:focus::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 45;
+  border: 6px solid transparent;
+  border-top-color: var(--green-dark);
+  pointer-events: none;
+}
+
+.qmr-range {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.qmr-range input[type='number'] {
+  width: 58px;
+  padding: 6px 8px;
+  border: 1px solid rgba(58, 90, 64, 0.3);
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: center;
+  background: #fff;
+}
+
+.qmr-range button {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--green);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.qmr-range button:hover {
+  background: var(--green-dark);
+}
+
+.qmr-range button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 860px) {
+  .qmr-range {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: center;
+  }
+}

@@ -2,7 +2,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { PageHeader, PageFooter } from './_shared'
 
-const SETTINGS_KEY = 'qmr-settings-v1'
+// v2: quran.com ids (numeric) + script preference. v1 stored alquran.cloud
+// string ids, which no longer exist — ignore it.
+const SETTINGS_KEY = 'qmr-settings-v2'
+const DEFAULT_TRANSLATION_ID = 84 // Mufti Taqi Usmani
+const DEFAULT_RECITATION_ID = 7 // Mishari Rashid al-`Afasy
 
 function loadSettings() {
   try {
@@ -132,8 +136,9 @@ export default function QuranPage() {
   const [recitations, setRecitations] = useState([])
 
   const [chapterNumber, setChapterNumber] = useState(initialSettings.chapterNumber || 1)
-  const [translationId, setTranslationId] = useState(initialSettings.translationId || 'en.sahih')
-  const [recitationId, setRecitationId] = useState(initialSettings.recitationId || 'ar.alafasy')
+  const [translationId, setTranslationId] = useState(Number(initialSettings.translationId) || DEFAULT_TRANSLATION_ID)
+  const [recitationId, setRecitationId] = useState(Number(initialSettings.recitationId) || DEFAULT_RECITATION_ID)
+  const [script, setScript] = useState(initialSettings.script === 'indopak' ? 'indopak' : 'uthmani')
   const [arabicSize, setArabicSize] = useState(initialSettings.arabicSize || 30)
   const [translationSize, setTranslationSize] = useState(initialSettings.translationSize || 17)
 
@@ -142,27 +147,34 @@ export default function QuranPage() {
   const [versesError, setVersesError] = useState(null)
 
   const [audioState, setAudioState] = useState('idle') // idle | loading | playing | paused
-  const [audioMode, setAudioMode] = useState(null) // 'ayah' | 'surah'
+  const [audioMode, setAudioMode] = useState(null) // 'ayah' | 'surah' | 'range'
   const [currentAyahKey, setCurrentAyahKey] = useState(null)
   const [audioErrorMsg, setAudioErrorMsg] = useState(null)
   const [repeatAyah, setRepeatAyah] = useState(false)
   const [loopEnabled, setLoopEnabled] = useState(false)
   const [volume, setVolume] = useState(1)
   const [playbackRate, setPlaybackRate] = useState(1)
+  const [rangeFrom, setRangeFrom] = useState(1)
+  const [rangeTo, setRangeTo] = useState(1)
 
   const audioRef = useRef(null)
   const ayahRefs = useRef(new Map())
-  const playlistRef = useRef([]) // sorted [{ ayahNumber, verseKey, url }] for current chapter+recitation
-  const playlistKeyRef = useRef(null) // `${recitationId}:${chapterNumber}` the playlist above belongs to
+  // Gapless track for the current chapter+reciter: one MP3 for the whole
+  // Surah plus per-ayah millisecond timestamps. No per-verse file swaps.
+  const trackRef = useRef(null) // { key, audioUrl, timestamps: [{verse_key, from, to}] }
   const audioModeRef = useRef(null)
   const repeatAyahRef = useRef(false)
   const loopEnabledRef = useRef(false)
+  const stopAtMsRef = useRef(null) // stop boundary for ayah/range modes
+  const rangeRef = useRef(null) // { fromMs, toMs } for range looping
+  const currentKeyRef = useRef(null)
 
   useEffect(() => { audioModeRef.current = audioMode }, [audioMode])
   useEffect(() => { repeatAyahRef.current = repeatAyah }, [repeatAyah])
   useEffect(() => { loopEnabledRef.current = loopEnabled }, [loopEnabled])
 
   const activeChapterInfo = chapters.find((c) => c.id === chapterNumber)
+  const verseCount = activeChapterInfo?.verse_count || 1
 
   useEffect(() => {
     fetch('/api/quran/chapters')
@@ -207,10 +219,13 @@ export default function QuranPage() {
   }, [chapterNumber, translationId])
 
   // Stop playback whenever the Surah or reciter changes so audio never plays
-  // over content the user is no longer looking at.
+  // over content the user is no longer looking at. Also reset range bounds.
   useEffect(() => {
     stopAudio()
-  }, [chapterNumber, recitationId])
+    setRangeFrom(1)
+    setRangeTo(activeChapterInfo?.verse_count || 1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapterNumber, recitationId, activeChapterInfo?.verse_count])
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume
@@ -221,8 +236,8 @@ export default function QuranPage() {
   }, [playbackRate])
 
   useEffect(() => {
-    saveSettings({ chapterNumber, translationId, recitationId, arabicSize, translationSize })
-  }, [chapterNumber, translationId, recitationId, arabicSize, translationSize])
+    saveSettings({ chapterNumber, translationId, recitationId, script, arabicSize, translationSize })
+  }, [chapterNumber, translationId, recitationId, script, arabicSize, translationSize])
 
   useEffect(() => {
     if (currentAyahKey && audioState === 'playing') {
@@ -231,21 +246,30 @@ export default function QuranPage() {
     }
   }, [currentAyahKey, audioState])
 
-  async function getPlaylist(chapterNum, recId) {
-    const key = `${recId}:${chapterNum}`
-    if (playlistKeyRef.current === key && playlistRef.current.length > 0) {
-      return playlistRef.current
-    }
-    const res = await fetch(`/api/quran/audio/verse/${recId}/${chapterNum}`)
+  // Load the gapless surah track (one MP3 + timestamps) and point the single
+  // <audio> element at it. Only refetches when chapter/reciter changes.
+  async function loadTrack() {
+    const key = `${recitationId}:${chapterNumber}`
+    if (trackRef.current?.key === key) return trackRef.current
+    const res = await fetch(`/api/quran/audio/surah/${recitationId}/${chapterNumber}`)
     if (!res.ok) throw new Error('Unable to load audio for this reciter')
-    const rows = await res.json()
-    const playlist = rows
-      .slice()
-      .sort((a, b) => a.ayah_number - b.ayah_number)
-      .map((r) => ({ ayahNumber: r.ayah_number, verseKey: r.verse_key, url: r.url }))
-    playlistRef.current = playlist
-    playlistKeyRef.current = key
-    return playlist
+    const data = await res.json()
+    const track = { key, audioUrl: data.audioUrl, timestamps: data.timestamps }
+    trackRef.current = track
+    if (audioRef.current && audioRef.current.src !== data.audioUrl) {
+      audioRef.current.src = data.audioUrl
+      audioRef.current.volume = volume
+      audioRef.current.playbackRate = playbackRate
+    }
+    return track
+  }
+
+  function tsForVerse(track, verseNumberInSurah) {
+    return track.timestamps.find((t) => t.verse_key === `${chapterNumber}:${verseNumberInSurah}`)
+  }
+
+  function tsForKey(track, verseKey) {
+    return track.timestamps.find((t) => t.verse_key === verseKey)
   }
 
   function stopAudio() {
@@ -253,6 +277,9 @@ export default function QuranPage() {
       audioRef.current.pause()
       audioRef.current.currentTime = 0
     }
+    stopAtMsRef.current = null
+    rangeRef.current = null
+    currentKeyRef.current = null
     setAudioState('idle')
     setAudioMode(null)
     setCurrentAyahKey(null)
@@ -268,19 +295,16 @@ export default function QuranPage() {
     setAudioState('playing')
   }
 
-  async function playFromPlaylistIndex(mode, index) {
-    const playlist = playlistRef.current
-    const item = playlist[index]
-    if (!item || !audioRef.current) return
+  async function startPlayback(mode, seekMs, stopMs) {
+    setAudioErrorMsg(null)
     setAudioMode(mode)
     audioModeRef.current = mode
-    setCurrentAyahKey(item.verseKey)
-    setAudioErrorMsg(null)
-    audioRef.current.src = item.url
-    audioRef.current.volume = volume
-    audioRef.current.playbackRate = playbackRate
+    stopAtMsRef.current = stopMs ?? null
+    const el = audioRef.current
+    if (!el) return
+    el.currentTime = seekMs / 1000
     try {
-      await audioRef.current.play()
+      await el.play()
       setAudioState('playing')
     } catch {
       setAudioState('idle')
@@ -292,10 +316,11 @@ export default function QuranPage() {
     setAudioState('loading')
     setAudioErrorMsg(null)
     try {
-      const playlist = await getPlaylist(chapterNumber, recitationId)
-      const index = playlist.findIndex((p) => p.verseKey === verseKey)
-      if (index === -1) throw new Error('Audio not found for this ayah')
-      await playFromPlaylistIndex('ayah', index)
+      const track = await loadTrack()
+      const ts = tsForKey(track, verseKey)
+      if (!ts) throw new Error('Audio not found for this ayah')
+      rangeRef.current = null
+      await startPlayback('ayah', ts.from, ts.to)
     } catch (err) {
       setAudioState('idle')
       setAudioErrorMsg(String(err.message || err))
@@ -306,46 +331,102 @@ export default function QuranPage() {
     setAudioState('loading')
     setAudioErrorMsg(null)
     try {
-      await getPlaylist(chapterNumber, recitationId)
-      await playFromPlaylistIndex('surah', 0)
+      await loadTrack()
+      rangeRef.current = null
+      await startPlayback('surah', 0, null)
     } catch (err) {
       setAudioState('idle')
       setAudioErrorMsg(String(err.message || err))
     }
   }
 
-  function currentIndex() {
-    return playlistRef.current.findIndex((p) => p.verseKey === currentAyahKey)
+  async function playRange() {
+    const from = Math.min(Math.max(1, rangeFrom), verseCount)
+    const to = Math.min(Math.max(from, rangeTo), verseCount)
+    setAudioState('loading')
+    setAudioErrorMsg(null)
+    try {
+      const track = await loadTrack()
+      const fromTs = tsForVerse(track, from)
+      const toTs = tsForVerse(track, to)
+      if (!fromTs || !toTs) throw new Error('Audio not found for that range')
+      rangeRef.current = { fromMs: fromTs.from, toMs: toTs.to }
+      await startPlayback('range', fromTs.from, toTs.to)
+    } catch (err) {
+      setAudioState('idle')
+      setAudioErrorMsg(String(err.message || err))
+    }
+  }
+
+  function currentTsIndex() {
+    const track = trackRef.current
+    if (!track) return -1
+    return track.timestamps.findIndex((t) => t.verse_key === currentKeyRef.current)
   }
 
   function goToOffset(offset) {
-    if (audioModeRef.current !== 'surah') return
-    const idx = currentIndex()
+    const track = trackRef.current
+    const el = audioRef.current
+    if (!track || !el || !audioModeRef.current) return
+    const idx = currentTsIndex()
     if (idx === -1) return
-    const target = idx + offset
-    if (target < 0 || target >= playlistRef.current.length) return
-    playFromPlaylistIndex('surah', target)
+    const target = track.timestamps[idx + offset]
+    if (!target) return
+    // In ayah mode, keep stopping at the (new) ayah's end.
+    if (audioModeRef.current === 'ayah') stopAtMsRef.current = target.to
+    el.currentTime = target.from / 1000
+    updateCurrentAyah(target.from)
   }
 
-  function handleEnded() {
-    if (repeatAyahRef.current) {
-      const idx = currentIndex()
-      if (idx !== -1) {
-        playFromPlaylistIndex(audioModeRef.current, idx)
+  function updateCurrentAyah(ms) {
+    const track = trackRef.current
+    if (!track) return
+    const ts = track.timestamps.find((t) => ms >= t.from && ms < t.to)
+    const key = ts ? ts.verse_key : null
+    if (key && key !== currentKeyRef.current) {
+      currentKeyRef.current = key
+      setCurrentAyahKey(key)
+    }
+  }
+
+  // The gapless engine: one MP3 keeps playing; this handler tracks which ayah
+  // the playhead is inside (for highlighting) and enforces stop/repeat/loop
+  // boundaries by seeking — never by swapping audio files.
+  function handleTimeUpdate() {
+    const el = audioRef.current
+    const track = trackRef.current
+    if (!el || !track || el.paused) return
+    const ms = el.currentTime * 1000
+
+    // Repeat current ayah: jump back to its start when crossing its end.
+    if (repeatAyahRef.current && currentKeyRef.current) {
+      const ts = track.timestamps.find((t) => t.verse_key === currentKeyRef.current)
+      if (ts && ms >= ts.to) {
+        el.currentTime = ts.from / 1000
         return
       }
     }
-    if (audioModeRef.current === 'surah') {
-      const idx = currentIndex()
-      const nextIdx = idx + 1
-      if (nextIdx < playlistRef.current.length) {
-        playFromPlaylistIndex('surah', nextIdx)
+
+    // Stop boundary (ayah / range modes).
+    if (stopAtMsRef.current !== null && ms >= stopAtMsRef.current) {
+      if (audioModeRef.current === 'range' && loopEnabledRef.current && rangeRef.current) {
+        el.currentTime = rangeRef.current.fromMs / 1000
+        updateCurrentAyah(rangeRef.current.fromMs)
         return
       }
-      if (loopEnabledRef.current) {
-        playFromPlaylistIndex('surah', 0)
-        return
-      }
+      stopAudio()
+      return
+    }
+
+    updateCurrentAyah(ms)
+  }
+
+  // Natural end of the surah file (surah mode reaches here).
+  function handleEnded() {
+    if (audioModeRef.current === 'surah' && loopEnabledRef.current && audioRef.current) {
+      audioRef.current.currentTime = 0
+      audioRef.current.play().catch(() => {})
+      return
     }
     stopAudio()
   }
@@ -355,13 +436,37 @@ export default function QuranPage() {
     else ayahRefs.current.delete(verseKey)
   }
 
+  function renderArabic(v) {
+    const indopak = script === 'indopak'
+    const cls = indopak ? 'qmr-arabic qmr-arabic--indopak' : 'qmr-arabic'
+    if (v.words && v.words.length > 0) {
+      return (
+        <p className={cls} dir="rtl" lang="ar">
+          {v.words.map((w, i) => (
+            <span key={w.position}>
+              {i > 0 ? ' ' : ''}
+              <span
+                className="qmr-word"
+                tabIndex={0}
+                data-tip={w.transliteration ? `${w.translation}\n${w.transliteration}` : w.translation}
+              >
+                {indopak ? w.text_indopak : w.text_uthmani}
+              </span>
+            </span>
+          ))}
+        </p>
+      )
+    }
+    return <p className={cls} dir="rtl" lang="ar">{indopak ? v.text_indopak : v.text_uthmani}</p>
+  }
+
   return (
     <div className="page-shell qmr-shell">
       <PageHeader />
       <main>
         <section className="qmr-hero">
           <h1>Quran Mushaf</h1>
-          <p>Read the Qurʾān with translation, and listen to your choice of reciter — ayah by ayah or the full Surah.</p>
+          <p>Read the Qurʾān in Uthmani or Indo-Pak script with word-by-word translation, and listen to your choice of reciter — an ayah, a range, or the full Surah.</p>
         </section>
 
         <section className="qmr-layout">
@@ -380,7 +485,7 @@ export default function QuranPage() {
               <div className="qmr-toolbar-row">
                 <label className="qmr-select">
                   Translation
-                  <select value={translationId} onChange={(e) => setTranslationId(e.target.value)}>
+                  <select value={translationId} onChange={(e) => setTranslationId(Number(e.target.value))}>
                     {translations.map((t) => (
                       <option key={t.id} value={t.id}>{t.name}</option>
                     ))}
@@ -394,6 +499,22 @@ export default function QuranPage() {
                 />
               </div>
               <div className="qmr-toolbar-row">
+                <div className="qmr-script-toggle" role="group" aria-label="Arabic script">
+                  <button
+                    type="button"
+                    className={script === 'uthmani' ? 'active' : ''}
+                    onClick={() => setScript('uthmani')}
+                  >
+                    Uthmani
+                  </button>
+                  <button
+                    type="button"
+                    className={script === 'indopak' ? 'active' : ''}
+                    onClick={() => setScript('indopak')}
+                  >
+                    Indo-Pak
+                  </button>
+                </div>
                 <label className="qmr-font-control">
                   Arabic size
                   <button type="button" onClick={() => setArabicSize((s) => Math.max(20, s - 2))}>–</button>
@@ -448,7 +569,7 @@ export default function QuranPage() {
                         </button>
                       </div>
                       <div className="qmr-ayah-text">
-                        <p className="qmr-arabic" dir="rtl" lang="ar">{v.text_uthmani}</p>
+                        {renderArabic(v)}
                         <p className="qmr-translation">{v.translation_text}</p>
                       </div>
                     </li>
@@ -466,7 +587,7 @@ export default function QuranPage() {
       <div className="qmr-audio-bar">
         {audioErrorMsg && <span className="qmr-audio-error">{audioErrorMsg}</span>}
         <div className="qmr-audio-controls">
-          <button type="button" onClick={() => goToOffset(-1)} disabled={audioMode !== 'surah'} aria-label="Previous ayah">⏮</button>
+          <button type="button" onClick={() => goToOffset(-1)} disabled={!audioMode} aria-label="Previous ayah">⏮</button>
           {audioState === 'playing' ? (
             <button type="button" className="qmr-audio-main" onClick={pauseAudio} aria-label="Pause">⏸</button>
           ) : audioState === 'paused' ? (
@@ -476,11 +597,34 @@ export default function QuranPage() {
               {audioState === 'loading' ? '…' : '▶'}
             </button>
           )}
-          <button type="button" onClick={() => goToOffset(1)} disabled={audioMode !== 'surah'} aria-label="Next ayah">⏭</button>
+          <button type="button" onClick={() => goToOffset(1)} disabled={!audioMode} aria-label="Next ayah">⏭</button>
           <button type="button" onClick={stopAudio} disabled={audioState === 'idle'} aria-label="Stop">⏹</button>
         </div>
+        <div className="qmr-range" aria-label="Play a range of ayahs">
+          <span>Ayah</span>
+          <input
+            type="number"
+            min={1}
+            max={verseCount}
+            value={rangeFrom}
+            onChange={(e) => setRangeFrom(Number(e.target.value))}
+            aria-label="From ayah"
+          />
+          <span>–</span>
+          <input
+            type="number"
+            min={1}
+            max={verseCount}
+            value={rangeTo}
+            onChange={(e) => setRangeTo(Number(e.target.value))}
+            aria-label="To ayah"
+          />
+          <button type="button" onClick={playRange} disabled={versesLoading || audioState === 'loading'}>
+            ▶ Range
+          </button>
+        </div>
         <div className="qmr-audio-meta">
-          {currentAyahKey ? <span>Ayah {currentAyahKey}</span> : <span>Play Surah or tap an ayah</span>}
+          {currentAyahKey ? <span>Ayah {currentAyahKey}</span> : <span>Play Surah, a range, or tap an ayah</span>}
         </div>
         <div className="qmr-audio-toggles">
           <label>
@@ -489,7 +633,7 @@ export default function QuranPage() {
           </label>
           <label>
             <input type="checkbox" checked={loopEnabled} onChange={(e) => setLoopEnabled(e.target.checked)} />
-            Loop Surah
+            Loop
           </label>
           <label className="qmr-speed">
             Speed
@@ -505,7 +649,13 @@ export default function QuranPage() {
             <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => setVolume(Number(e.target.value))} />
           </label>
         </div>
-        <audio ref={audioRef} onEnded={handleEnded} onError={() => setAudioErrorMsg('This audio file failed to load.')} />
+        <audio
+          ref={audioRef}
+          preload="auto"
+          onTimeUpdate={handleTimeUpdate}
+          onEnded={handleEnded}
+          onError={() => setAudioErrorMsg('This audio file failed to load.')}
+        />
       </div>
 
       <PageFooter />
