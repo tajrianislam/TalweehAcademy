@@ -2151,7 +2151,13 @@ span.hl-icon {
 .course-price { font-size: 1.6rem; font-weight: 700; color: #222; }
 .course-cadence { font-size: 0.85rem; color: #777; }
 .course-currency { font-size: 0.75rem; color: #999; }
-.course-enroll-btn { width: 100%; margin-bottom: 16px; }
+.course-enroll-btn { width: 100%; margin-bottom: 16px; display: inline-block; text-align: center; text-decoration: none; box-sizing: border-box; }
+.course-checkout-note { font-size: 0.88rem; color: #666; margin: 0 0 16px; line-height: 1.5; }
+.course-checkout-canceled { color: #a15c00; }
+.course-checkout-error { color: #b3261e; }
+.dashboard-billing-row { margin: 0 0 16px; }
+.checkout-success-section .courses-status,
+.membership-section .courses-status { max-width: 640px; }
 .course-meta-list { display: flex; flex-direction: column; gap: 8px; }
 .course-meta-item { display: flex; justify-content: space-between; font-size: 0.88rem; border-bottom: 1px solid #f0f0f0; padding-bottom: 6px; }
 .course-meta-item span:first-child { color: #888; }

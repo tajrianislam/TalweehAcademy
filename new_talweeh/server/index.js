@@ -798,11 +798,11 @@ app.post('/api/courses', requireAdmin, async (req, res) => {
   try {
     const [result] = await pool.query(
       `INSERT INTO courses
-        (title, slug, description, price, cadence, status, category, instructor_name, instructor_avatar_url, thumbnail_url, level)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (title, slug, description, price, cadence, status, category, instructor_name, instructor_avatar_url, thumbnail_url, level, members_only)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [title, slug, description || null, price || 0, cadence || null, status || 'Online',
        category || null, instructor_name || null, instructor_avatar_url || null,
-       thumbnail_url || null, level || 'Beginner']
+       thumbnail_url || null, level || 'Beginner', req.body.members_only ? 1 : 0]
     )
     const [rows] = await pool.query('SELECT * FROM courses WHERE id = ?', [result.insertId])
     res.status(201).json(rows[0])
@@ -818,7 +818,7 @@ app.put('/api/courses/:id', requireAdmin, async (req, res) => {
   const courseId = Number(req.params.id)
   if (!Number.isInteger(courseId) || courseId <= 0) return res.status(400).json({ error: 'Invalid course id' })
   const ALLOWED = ['title', 'description', 'price', 'cadence', 'status', 'category',
-    'instructor_name', 'instructor_avatar_url', 'thumbnail_url', 'level']
+    'instructor_name', 'instructor_avatar_url', 'thumbnail_url', 'level', 'members_only']
   const updates = []
   const values = []
   for (const field of ALLOWED) {
@@ -943,17 +943,23 @@ app.get('/api/courses/:slug', async (req, res) => {
 // Check if the authenticated user is enrolled in a course
 app.get('/api/courses/:slug/enrollment', requireAuth, async (req, res) => {
   try {
-    const [courses] = await pool.query('SELECT id FROM courses WHERE slug = ?', [req.params.slug])
+    const [courses] = await pool.query('SELECT id, members_only FROM courses WHERE slug = ?', [req.params.slug])
     if (courses.length === 0) return res.status(404).json({ error: 'Course not found' })
-    const courseId = courses[0].id
+    const course = courses[0]
 
     if (req.user.role === 'admin') return res.json({ enrolled: true })
 
     const [rows] = await pool.query(
       'SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?',
-      [req.user.id, courseId]
+      [req.user.id, course.id]
     )
-    res.json({ enrolled: rows.length > 0 })
+    if (rows.length > 0) return res.json({ enrolled: true })
+
+    // Members-only courses are unlocked by an active Talweeh Society membership.
+    if (course.members_only && await userHasActiveMembership(pool, req.user.id, req.user.email)) {
+      return res.json({ enrolled: true, via: 'membership' })
+    }
+    res.json({ enrolled: false })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Failed to check enrollment' })
@@ -1099,7 +1105,14 @@ app.get('/api/lessons/:id', async (req, res) => {
           [payload.id, lesson.course_id]
         )
         if (enrRows.length === 0) {
-          return res.status(403).json({ error: 'enrollment_required' })
+          // Members-only courses are unlocked by an active membership.
+          const [courseRows] = await pool.query(
+            'SELECT members_only FROM courses WHERE id = ?', [lesson.course_id]
+          )
+          const membersOnly = courseRows.length > 0 && courseRows[0].members_only
+          if (!membersOnly || !(await userHasActiveMembership(pool, payload.id, payload.email))) {
+            return res.status(403).json({ error: 'enrollment_required' })
+          }
         }
       }
     }
@@ -2086,8 +2099,8 @@ app.get('/api/me/orders', requireAuth, async (req, res) => {
 app.get('/api/me/subscriptions', requireAuth, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT s.id, s.wp_subscription_id, s.status, s.total, s.billing_period,
-              s.start_at, s.next_payment_at, c.title AS course_title, c.slug AS course_slug
+      `SELECT s.id, s.wp_subscription_id, s.stripe_subscription_id, s.status, s.total, s.billing_period,
+              s.start_at, s.next_payment_at, s.cancel_at, c.title AS course_title, c.slug AS course_slug
          FROM subscriptions s
          LEFT JOIN courses c ON c.id = s.course_id
         WHERE s.user_id = ? OR s.billing_email = ?
@@ -2104,7 +2117,8 @@ app.get('/api/me/subscriptions', requireAuth, async (req, res) => {
 app.get('/api/orders', requireAdmin, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT o.id, o.wp_order_id, o.status, o.total, o.currency, o.payment_method, o.created_at,
+      `SELECT o.id, o.wp_order_id, o.stripe_checkout_session_id, o.stripe_payment_intent_id,
+              o.status, o.total, o.currency, o.payment_method, o.created_at,
               o.billing_email, u.name AS user_name
          FROM orders o LEFT JOIN auth_users u ON u.id = o.user_id
         ORDER BY o.created_at DESC LIMIT 1000`
@@ -2119,7 +2133,7 @@ app.get('/api/orders', requireAdmin, async (req, res) => {
 app.get('/api/subscriptions', requireAdmin, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT s.id, s.wp_subscription_id, s.status, s.total, s.billing_period,
+      `SELECT s.id, s.wp_subscription_id, s.stripe_subscription_id, s.status, s.total, s.billing_period,
               s.start_at, s.next_payment_at, s.billing_email,
               u.name AS user_name, c.title AS course_title
          FROM subscriptions s
@@ -2143,6 +2157,131 @@ app.get('/api/coupons', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Failed to fetch coupons' })
+  }
+})
+
+// ── Payments (Stripe Checkout + Customer Portal) ──────────
+// All endpoints degrade to 503 until STRIPE_SECRET_KEY is configured.
+
+app.get('/api/payments/config', (req, res) => {
+  res.json({
+    stripe_enabled: Boolean(stripe),
+    membership_enabled: Boolean(stripe && MEMBERSHIP_PRICE_ID),
+  })
+})
+
+app.post('/api/checkout/session', requireAuth, async (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'Payments not configured' })
+  const { courseSlug, product } = req.body || {}
+  try {
+    const customerId = await getOrCreateStripeCustomer(pool, req.user)
+
+    if (product === 'membership') {
+      if (!MEMBERSHIP_PRICE_ID) return res.status(503).json({ error: 'Membership not configured' })
+      if (await userHasActiveMembership(pool, req.user.id, req.user.email)) {
+        return res.status(409).json({ error: 'You already have an active membership' })
+      }
+      const session = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        customer: customerId,
+        line_items: [{ price: MEMBERSHIP_PRICE_ID, quantity: 1 }],
+        allow_promotion_codes: true,
+        metadata: { user_id: String(req.user.id), kind: 'membership' },
+        subscription_data: { metadata: { user_id: String(req.user.id), kind: 'membership' } },
+        success_url: `${APP_BASE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${APP_BASE_URL}/membership?canceled=1`,
+      })
+      return res.json({ url: session.url })
+    }
+
+    if (!courseSlug) return res.status(400).json({ error: 'courseSlug or product is required' })
+    const [courses] = await pool.query(
+      'SELECT id, title, slug, price FROM courses WHERE slug = ?', [courseSlug]
+    )
+    if (courses.length === 0) return res.status(404).json({ error: 'Course not found' })
+    const course = courses[0]
+    const amount = Math.round(Number(course.price) * 100)
+    if (!amount || amount <= 0) return res.status(400).json({ error: 'This course cannot be purchased' })
+
+    const [enrRows] = await pool.query(
+      'SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [req.user.id, course.id]
+    )
+    if (enrRows.length > 0) return res.status(409).json({ error: 'You are already enrolled in this course' })
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      customer: customerId,
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          unit_amount: amount,
+          product_data: { name: course.title },
+        },
+        quantity: 1,
+      }],
+      allow_promotion_codes: true,
+      metadata: {
+        user_id: String(req.user.id),
+        course_id: String(course.id),
+        kind: 'course',
+        item_name: course.title.slice(0, 450),
+      },
+      success_url: `${APP_BASE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${APP_BASE_URL}/courses/${course.slug}?canceled=1`,
+    })
+    res.json({ url: session.url })
+  } catch (err) {
+    console.error('[stripe] Failed to create checkout session:', err)
+    res.status(500).json({ error: 'Failed to start checkout' })
+  }
+})
+
+// Success-page confirmation. Also runs fulfillment as a fallback in case the
+// redirect beats the webhook (fulfillment is idempotent either way).
+app.get('/api/checkout/session/:id', requireAuth, async (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'Payments not configured' })
+  try {
+    const session = await stripe.checkout.sessions.retrieve(req.params.id)
+    if (session.metadata?.user_id !== String(req.user.id)) {
+      return res.status(404).json({ error: 'Session not found' })
+    }
+    if (session.mode === 'payment' && session.payment_status === 'paid') {
+      await fulfillCheckoutSession(pool, session)
+    }
+    res.json({
+      status: session.status,
+      payment_status: session.payment_status,
+      mode: session.mode,
+      kind: session.metadata?.kind || null,
+      item_name: session.metadata?.item_name || (session.mode === 'subscription' ? MEMBERSHIP_NAME : null),
+      course_id: session.metadata?.course_id ? Number(session.metadata.course_id) : null,
+      amount_total: (session.amount_total || 0) / 100,
+      currency: (session.currency || 'usd').toUpperCase(),
+    })
+  } catch (err) {
+    if (err?.statusCode === 404 || err?.code === 'resource_missing') {
+      return res.status(404).json({ error: 'Session not found' })
+    }
+    console.error('[stripe] Failed to retrieve checkout session:', err)
+    res.status(500).json({ error: 'Failed to check payment status' })
+  }
+})
+
+// Stripe Customer Portal — subscription cancellation, card updates, invoices.
+app.post('/api/billing/portal', requireAuth, async (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'Payments not configured' })
+  try {
+    const [rows] = await pool.query('SELECT stripe_customer_id FROM auth_users WHERE id = ?', [req.user.id])
+    const customerId = rows.length ? rows[0].stripe_customer_id : null
+    if (!customerId) return res.status(404).json({ error: 'No billing profile found for this account' })
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${APP_BASE_URL}/dashboard`,
+    })
+    res.json({ url: session.url })
+  } catch (err) {
+    console.error('[stripe] Failed to create portal session:', err)
+    res.status(500).json({ error: 'Failed to open billing portal' })
   }
 })
 
@@ -2557,6 +2696,56 @@ async function ensureCommerceSchema() {
   }
 }
 
+// ── Stripe payments schema ────────────────────────────────
+// New live-payment rows share the commerce tables with the imported
+// WooCommerce history; they're distinguished by wp_* ids being NULL and the
+// stripe_* columns being set.
+async function ensureStripeSchema() {
+  if (await tableExists('auth_users')) {
+    await ensureColumn('auth_users', 'stripe_customer_id',
+      'ALTER TABLE auth_users ADD COLUMN stripe_customer_id VARCHAR(64) NULL')
+    await ensureIndex('auth_users', 'idx_auth_users_stripe_customer',
+      'ALTER TABLE auth_users ADD INDEX idx_auth_users_stripe_customer (stripe_customer_id)')
+  }
+
+  await ensureColumn('orders', 'stripe_checkout_session_id',
+    'ALTER TABLE orders ADD COLUMN stripe_checkout_session_id VARCHAR(128) NULL')
+  await ensureColumn('orders', 'stripe_payment_intent_id',
+    'ALTER TABLE orders ADD COLUMN stripe_payment_intent_id VARCHAR(128) NULL')
+  // UNIQUE keys are the fulfillment idempotency guards (webhook replays and
+  // the success-page fallback both insert; only the first wins).
+  await ensureIndex('orders', 'uq_orders_stripe_session',
+    'ALTER TABLE orders ADD UNIQUE KEY uq_orders_stripe_session (stripe_checkout_session_id)')
+  await ensureIndex('orders', 'uq_orders_stripe_pi',
+    'ALTER TABLE orders ADD UNIQUE KEY uq_orders_stripe_pi (stripe_payment_intent_id)')
+
+  await ensureColumn('subscriptions', 'stripe_subscription_id',
+    'ALTER TABLE subscriptions ADD COLUMN stripe_subscription_id VARCHAR(128) NULL')
+  await ensureColumn('subscriptions', 'stripe_customer_id',
+    'ALTER TABLE subscriptions ADD COLUMN stripe_customer_id VARCHAR(64) NULL')
+  await ensureColumn('subscriptions', 'cancel_at',
+    'ALTER TABLE subscriptions ADD COLUMN cancel_at DATETIME NULL')
+  await ensureIndex('subscriptions', 'uq_subscriptions_stripe',
+    'ALTER TABLE subscriptions ADD UNIQUE KEY uq_subscriptions_stripe (stripe_subscription_id)')
+
+  await ensureColumn('enrollments', 'source',
+    "ALTER TABLE enrollments ADD COLUMN source VARCHAR(20) NOT NULL DEFAULT 'admin' COMMENT 'admin | purchase'")
+
+  if (await tableExists('courses')) {
+    await ensureColumn('courses', 'members_only',
+      'ALTER TABLE courses ADD COLUMN members_only TINYINT(1) NOT NULL DEFAULT 0')
+  }
+
+  // Webhook event-level idempotency log.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS stripe_events (
+      event_id    VARCHAR(64) PRIMARY KEY,
+      type        VARCHAR(80) NOT NULL,
+      received_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `)
+}
+
 async function ensureContactSchema() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS contact_messages (
@@ -2583,6 +2772,7 @@ async function startServer() {
     await ensurePagesSchema()
     await ensureSiteContentSchema()
     await ensureCommerceSchema()
+    await ensureStripeSchema()
     await ensureContactSchema()
     app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`))
   } catch (err) {

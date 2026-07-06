@@ -426,18 +426,19 @@ export function CommerceAdmin() {
 
   return (
     <div className="admin-section">
-      <SectionHeader icon="🧾" title="Commerce" subtitle="Imported historical orders & subscriptions (read-only)" />
+      <SectionHeader icon="🧾" title="Commerce" subtitle="Live Stripe payments & imported WordPress history" />
       {loading ? <p className="courses-status">Loading…</p> : (
         <>
           <p className="add-lesson-form-title">Subscriptions ({subs.length})</p>
           <div className="admin-enrollment-table-wrap">
             <table className="admin-enrollment-table">
-              <thead><tr><th>Customer</th><th>Course</th><th>Status</th><th>Amount</th><th>Next Payment</th></tr></thead>
+              <thead><tr><th>Customer</th><th>Course</th><th>Source</th><th>Status</th><th>Amount</th><th>Next Payment</th></tr></thead>
               <tbody>
                 {subs.slice(0, 200).map((s) => (
                   <tr key={s.id}>
                     <td>{s.user_name || s.billing_email || '—'}</td>
                     <td>{s.course_title || '—'}</td>
+                    <td>{s.stripe_subscription_id ? 'Stripe' : 'WordPress'}</td>
                     <td><span className={`sub-status sub-${s.status}`}>{s.status}</span></td>
                     <td>{s.total != null ? Number(s.total).toFixed(2) : '—'}</td>
                     <td>{fmt(s.next_payment_at)}</td>
@@ -450,12 +451,13 @@ export function CommerceAdmin() {
           <p className="add-lesson-form-title admin-section-spaced">Orders ({orders.length})</p>
           <div className="admin-enrollment-table-wrap">
             <table className="admin-enrollment-table">
-              <thead><tr><th>Order</th><th>Customer</th><th>Status</th><th>Total</th><th>Date</th></tr></thead>
+              <thead><tr><th>Order</th><th>Customer</th><th>Source</th><th>Status</th><th>Total</th><th>Date</th></tr></thead>
               <tbody>
                 {orders.slice(0, 200).map((o) => (
                   <tr key={o.id}>
                     <td>#{o.wp_order_id || o.id}</td>
                     <td>{o.user_name || o.billing_email || '—'}</td>
+                    <td>{o.stripe_checkout_session_id || o.stripe_payment_intent_id ? 'Stripe' : 'WordPress'}</td>
                     <td><span className={`sub-status sub-${o.status}`}>{o.status}</span></td>
                     <td>{Number(o.total).toFixed(2)} {o.currency}</td>
                     <td>{fmt(o.created_at)}</td>

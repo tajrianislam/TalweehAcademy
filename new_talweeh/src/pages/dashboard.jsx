@@ -18,6 +18,24 @@ export default function DashboardPage() {
   const [orders, setOrders] = useState([])
   const [subs, setSubs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [portalError, setPortalError] = useState(null)
+  const [portalLoading, setPortalLoading] = useState(false)
+
+  const hasStripeBilling = subs.some((s) => s.stripe_subscription_id)
+
+  async function openBillingPortal() {
+    setPortalLoading(true)
+    setPortalError(null)
+    try {
+      const res = await fetch('/api/billing/portal', { method: 'POST', credentials: 'include' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to open billing portal')
+      window.location.assign(data.url)
+    } catch (e) {
+      setPortalError(e.message)
+      setPortalLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/')
@@ -43,6 +61,14 @@ export default function DashboardPage() {
 
         <section className="dashboard-section">
           <h2>My Subscriptions</h2>
+          {hasStripeBilling && (
+            <p className="dashboard-billing-row">
+              <button className="journey-button" type="button" onClick={openBillingPortal} disabled={portalLoading}>
+                {portalLoading ? 'Opening…' : 'Manage Billing'}
+              </button>
+              {portalError && <span className="courses-error"> {portalError}</span>}
+            </p>
+          )}
           {loading ? (
             <p className="courses-status">Loading…</p>
           ) : subs.length === 0 ? (

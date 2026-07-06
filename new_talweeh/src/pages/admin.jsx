@@ -22,7 +22,7 @@ const CATEGORIES = [
 const BLANK_COURSE = {
   title: '', description: '', price: '', cadence: '', status: 'Online',
   category: '', level: 'Beginner', instructor_name: '',
-  instructor_avatar_url: '', thumbnail_url: '',
+  instructor_avatar_url: '', thumbnail_url: '', members_only: false,
 }
 
 const BLANK_LESSON = { title: '', youtube_url: '', is_free: false }
@@ -203,6 +203,16 @@ export function CreateCourseSection({ onCreated }) {
           <div className="form-row">
             <label>Thumbnail URL</label>
             <input name="thumbnail_url" value={form.thumbnail_url} onChange={handleChange} placeholder="https://…" />
+          </div>
+          <div className="form-row form-row-inline">
+            <label>
+              <input
+                type="checkbox"
+                checked={Boolean(form.members_only)}
+                onChange={(e) => setForm((p) => ({ ...p, members_only: e.target.checked }))}
+              />
+              {' '}Included in Talweeh Society membership
+            </label>
           </div>
           <div className="form-row">
             <label>Instructor Avatar URL</label>
@@ -469,6 +479,28 @@ export function ManageCoursesSection({ courses, onRefresh }) {
     }
   }
 
+  async function toggleMembersOnly(course) {
+    const next = course.members_only ? 0 : 1
+    setBusyId(course.id)
+    setMsg(null)
+    try {
+      const res = await fetch(`/api/courses/${course.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ members_only: next }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Failed to update course')
+      setMsg({ type: 'success', text: `"${course.title}" is ${next ? 'now included in' : 'no longer part of'} the Talweeh Society membership.` })
+      onRefresh()
+    } catch (err) {
+      setMsg({ type: 'error', text: err.message })
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   async function deleteCourse(course) {
     const enrollNote = 'This permanently deletes the course, its lessons, quizzes, student progress, and enrollments.'
     const typed = window.prompt(`${enrollNote}\n\nType the course title to confirm:\n${course.title}`)
@@ -535,6 +567,7 @@ export function ManageCoursesSection({ courses, onRefresh }) {
                     <span className={`admin-course-badge ${badgeClass(course.status)}`}>{course.status}</span>
                     <span className="admin-course-lessons-count">{course.lessons?.length ?? 0} lessons</span>
                     {course.category && <span className="admin-course-lessons-count">· {course.category}</span>}
+                    {Boolean(course.members_only) && <span className="admin-course-lessons-count">· Members</span>}
                   </div>
                 </div>
               </div>
@@ -553,6 +586,15 @@ export function ManageCoursesSection({ courses, onRefresh }) {
                   onClick={() => toggleHidden(course)}
                 >
                   {course.status === 'Hidden' ? 'Unhide' : 'Hide'}
+                </button>
+                <button
+                  type="button"
+                  className="admin-hide-btn"
+                  disabled={busyId === course.id}
+                  onClick={() => toggleMembersOnly(course)}
+                  title="Members-only courses are unlocked by an active Talweeh Society membership"
+                >
+                  {course.members_only ? 'Members ✓' : 'Members'}
                 </button>
                 <button
                   type="button"

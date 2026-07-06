@@ -144,7 +144,7 @@ export const CONTENT_REGISTRY = {
         heading: 'Join Talweeh Society',
         text: 'Join us as we share uplifting reminders and insights from various texts, along with access to our free weekly lessons.',
         buttonLabel: 'Join Us',
-        buttonHref: '#',
+        buttonHref: '/membership',
       },
     },
     youtube: {

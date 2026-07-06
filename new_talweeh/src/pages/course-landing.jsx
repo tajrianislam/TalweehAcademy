@@ -1,16 +1,51 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { PageHeader, PageHero, PageFooter } from './_shared'
 import { useAuth } from '../context/AuthContext'
 import { ASSET } from '../constants/assets'
 
 export default function CourseLandingPage() {
   const { slug } = useParams()
-  const { user, loading: authLoading } = useAuth()
+  const [searchParams] = useSearchParams()
+  const { user, loading: authLoading, openAuthModal } = useAuth()
   const [course, setCourse] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [enrolled, setEnrolled] = useState(false)
+  const [stripeEnabled, setStripeEnabled] = useState(false)
+  const [buying, setBuying] = useState(false)
+  const [buyError, setBuyError] = useState(null)
+  const canceled = searchParams.get('canceled') === '1'
+
+  useEffect(() => {
+    fetch('/api/payments/config')
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((cfg) => setStripeEnabled(Boolean(cfg.stripe_enabled)))
+      .catch(() => setStripeEnabled(false))
+  }, [])
+
+  async function handleBuy() {
+    if (!user) {
+      openAuthModal('login')
+      return
+    }
+    setBuying(true)
+    setBuyError(null)
+    try {
+      const res = await fetch('/api/checkout/session', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseSlug: slug }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to start checkout')
+      window.location.assign(data.url)
+    } catch (e) {
+      setBuyError(e.message)
+      setBuying(false)
+    }
+  }
 
   useEffect(() => {
     fetch(`/api/courses/${slug}`)
@@ -149,9 +184,45 @@ export default function CourseLandingPage() {
                 {course.cadence && <span className="course-cadence">{course.cadence}</span>}
                 <em className="course-currency">[USD]</em>
               </div>
-              <button className="journey-button course-enroll-btn" type="button">
-                Add to Cart
-              </button>
+              {canceled && (
+                <p className="course-checkout-note course-checkout-canceled">
+                  Checkout was canceled — you have not been charged.
+                </p>
+              )}
+              {enrolled ? (
+                course.lessons?.length > 0 ? (
+                  <Link
+                    className="journey-button course-enroll-btn"
+                    to={`/courses/${slug}/lesson/${course.lessons[0].id}`}
+                  >
+                    Go to Course
+                  </Link>
+                ) : (
+                  <p className="course-checkout-note">You are enrolled in this course.</p>
+                )
+              ) : Number(course.price) > 0 ? (
+                stripeEnabled ? (
+                  <>
+                    <button
+                      className="journey-button course-enroll-btn"
+                      type="button"
+                      onClick={handleBuy}
+                      disabled={buying}
+                    >
+                      {buying ? 'Redirecting…' : user ? `Buy Now — $${Number(course.price).toFixed(2)}` : 'Sign in to Buy'}
+                    </button>
+                    {buyError && <p className="course-checkout-note course-checkout-error">{buyError}</p>}
+                  </>
+                ) : (
+                  <p className="course-checkout-note">
+                    Online enrollment is opening soon. <Link to="/contact-us">Contact us</Link> to enroll.
+                  </p>
+                )
+              ) : (
+                <p className="course-checkout-note">
+                  This course is free — <Link to="/contact-us">contact us</Link> for access.
+                </p>
+              )}
 
               <div className="course-meta-list">
                 {course.level && (
