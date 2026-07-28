@@ -188,17 +188,25 @@ export default function QuranPage() {
   const activeChapterInfo = chapters.find((c) => c.id === chapterNumber)
   const verseCount = activeChapterInfo?.verse_count || 1
 
-  // The site header is sticky; the surah bar sticks just below it
-  // (quran.com-style). Track the header's live height.
+  // The surah bar sticks below the site header on desktop (where the header
+  // is sticky) and at the very top on mobile (where the header is static and
+  // scrolls away). Track both the header's height and its computed position.
   useEffect(() => {
     const subbar = subbarRef.current
     const header = document.querySelector('.site-header')
     if (!subbar || !header) return
-    const apply = () => subbar.style.setProperty('--qmr-subbar-top', `${header.offsetHeight}px`)
+    const apply = () => {
+      const headerIsPinned = ['sticky', 'fixed'].includes(getComputedStyle(header).position)
+      subbar.style.setProperty('--qmr-subbar-top', headerIsPinned ? `${header.offsetHeight}px` : '0px')
+    }
     apply()
     const observer = new ResizeObserver(apply)
     observer.observe(header)
-    return () => observer.disconnect()
+    window.addEventListener('resize', apply)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', apply)
+    }
   }, [])
 
   function goToChapter(offset) {
