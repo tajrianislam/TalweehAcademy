@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from 'react'
 import './App.css'
-import { Link, Route, Routes } from 'react-router-dom'
+import { Link, Route, Routes, useLocation } from 'react-router-dom'
 import CourseCard from './components/CourseCard'
 import VideoFacade from './components/VideoFacade'
 import CoursesPage from './pages/courses'
@@ -383,11 +383,23 @@ function NotFoundPage() {
   )
 }
 
+// React Router keeps the previous page's scroll offset across navigations —
+// without this, opening a page from a scrolled position lands mid-page.
+// Hash links (#curriculum) are left alone so in-page anchors still work.
+function ScrollToTop() {
+  const { pathname, hash } = useLocation()
+  useEffect(() => {
+    if (!hash) window.scrollTo(0, 0)
+  }, [pathname, hash])
+  return null
+}
+
 function AppInner() {
   const { modal, closeAuthModal } = useAuth()
 
   return (
     <EditModeProvider>
+      <ScrollToTop />
       <AuthModal open={modal.open} initialTab={modal.tab} onClose={closeAuthModal} />
       <EditModeToggle />
       <Routes>
