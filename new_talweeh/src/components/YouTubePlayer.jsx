@@ -13,8 +13,6 @@ function formatClock(totalSeconds = 0) {
 export default function YouTubePlayer({
   videoId,
   title,
-  badge = 'Overview',
-  instructor,
   startSeconds = 0,
   onReady,
   onPlay,
@@ -177,11 +175,6 @@ export default function YouTubePlayer({
         onClick={togglePlay}
         aria-label={isPlaying ? 'Pause video' : 'Play video'}
       />
-
-      <div className="tap-player-topbar">
-        {badge && <span className="tap-player-badge">{badge}</span>}
-        {instructor && <span className="tap-player-instructor">{instructor}</span>}
-      </div>
 
       <div className="tap-player-controls" onClick={(e) => e.stopPropagation()}>
         <button

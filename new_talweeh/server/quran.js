@@ -18,8 +18,8 @@ const router = express.Router()
 const BASE_URL = 'https://api.quran.com/api/v4'
 // Mufti Taqi Usmani (verse-level translation resource on quran.com)
 const DEFAULT_TRANSLATION_ID = 84
-// Mishari Rashid al-`Afasy (gapless chapter recitations)
-const DEFAULT_RECITATION_ID = 7
+// Sa`ud ash-Shuraym (gapless chapter recitations)
+const DEFAULT_RECITATION_ID = 10
 
 // Chapter list, translation list, and reciter list rarely change — cache them
 // (and per-Surah verse/audio lookups) in memory to avoid hammering the

@@ -236,6 +236,16 @@ span.hl-icon {
   line-height: 1.55;
 }
 
+.highlight-link {
+  display: block;
+  color: inherit;
+}
+
+.highlight-link:hover h3 {
+  color: var(--green-dark);
+  text-decoration: underline;
+}
+
 /* ── Shared section headings & divider ─── */
 
 .landing-featured h2,
@@ -271,6 +281,24 @@ span.hl-icon {
   gap: 30px 22px;
   margin-bottom: 36px;
   text-align: left;
+}
+
+/* One auto-scrolling row of 4 cards (all courses scroll through it). */
+.landing-featured-carousel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 3 * 22px) / 4);
+  gap: 22px;
+  margin-bottom: 36px;
+  text-align: left;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  padding-bottom: 10px;
+}
+
+.landing-featured-carousel .course-card {
+  scroll-snap-align: start;
 }
 
 .green-button {
@@ -431,11 +459,18 @@ span.hl-icon {
 /* ── Join Talweeh Society ──────────────── */
 
 .landing-join-society {
-  padding: 26px 28px;
-  background: var(--green-soft);
-  border-top: 1px solid rgba(58, 90, 64, 0.15);
-  border-bottom: 1px solid rgba(58, 90, 64, 0.15);
-  color: var(--ink);
+  padding: 44px 28px;
+  background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+  color: #fff;
+}
+
+.landing-join-society .hl-icon {
+  fill: #fff;
+  opacity: 0.9;
+}
+
+.landing-join-society .red-button {
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
 }
 
 .join-society-inner {
@@ -459,16 +494,16 @@ span.hl-icon {
 .landing-join-society h3 {
   margin: 0 0 4px;
   font-family: 'Talweeh Cinzel', Georgia, serif;
-  font-size: 1.3rem;
+  font-size: 1.45rem;
   letter-spacing: 1px;
-  color: var(--green-dark);
+  color: #fff;
 }
 
 .landing-join-society p {
   margin: 0;
   font-size: 15px;
   line-height: 1.5;
-  color: #3a4a40;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* ── YouTube ───────────────────────────── */
@@ -502,6 +537,61 @@ span.hl-icon {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px;
   margin-bottom: 34px;
+}
+
+/* Horizontally scrollable video row — holds any number of videos. */
+.youtube-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 2 * 22px) / 3);
+  gap: 22px;
+  margin-bottom: 34px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  padding-bottom: 10px;
+}
+
+.youtube-row .youtube-embed {
+  scroll-snap-align: start;
+}
+
+/* Click-to-load facade with our own green play button (no YouTube branding). */
+.video-facade {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+}
+
+.video-facade img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.video-facade-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.video-facade:hover .video-facade-play {
+  background: var(--green-dark);
+  transform: translate(-50%, -50%) scale(1.08);
 }
 
 .youtube-embed {
@@ -909,6 +999,35 @@ span.hl-icon {
   font-style: normal;
 }
 
+/* Pre-discount price, crossed out next to the live price. */
+.price-original {
+  color: var(--muted);
+  font-size: 15px;
+  text-decoration: line-through;
+}
+
+/* Clickable card zones */
+.course-card-clickable {
+  cursor: pointer;
+}
+
+.course-card-clickable .instructor-strip {
+  cursor: pointer;
+}
+
+.course-card-clickable .instructor-strip:hover strong {
+  text-decoration: underline;
+}
+
+.price-line-clickable {
+  cursor: pointer;
+  width: fit-content;
+}
+
+.price-line-clickable:hover strong {
+  text-decoration: underline;
+}
+
 .course-footer {
   display: flex;
   align-items: center;
@@ -1068,6 +1187,14 @@ span.hl-icon {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .landing-featured-carousel {
+    grid-auto-columns: calc((100% - 22px) / 2);
+  }
+
+  .youtube-row {
+    grid-auto-columns: calc((100% - 22px) / 2);
+  }
+
   .landing-highlights {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -1117,6 +1244,14 @@ span.hl-icon {
   .landing-article-grid,
   .landing-testimonial-grid {
     grid-template-columns: 1fr;
+  }
+
+  .landing-featured-carousel {
+    grid-auto-columns: min(320px, 88%);
+  }
+
+  .youtube-row {
+    grid-auto-columns: min(320px, 88%);
   }
 
   .landing-about-why {
@@ -2643,6 +2778,13 @@ span.hl-icon {
   border-radius: 8px;
   background: #f7fbf8;
 }
+
+.lesson-progress-card .lesson-progress-card-actions {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
 .lesson-progress-card div {
   display: flex;
   flex-direction: column;
@@ -2716,6 +2858,162 @@ span.hl-icon {
   margin-bottom: 12px;
 }
 .lesson-tab-heading h2 { margin: 0; }
+
+/* ── Lesson: inline overview editor + exercise files ─────── */
+.lesson-overview-editor textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d6ded5;
+  border-radius: 8px;
+  font: inherit;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.lesson-overview-editor-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.lesson-file-upload-btn {
+  cursor: pointer;
+}
+
+.lesson-file-upload-btn.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.lesson-files-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lesson-files-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e2e8e0;
+  border-radius: 8px;
+  background: #fafcf9;
+}
+
+.lesson-files-list li > a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: #1f2a23;
+  font-weight: 600;
+}
+
+.lesson-files-list li > a:hover .lesson-file-name {
+  text-decoration: underline;
+}
+
+.lesson-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lesson-file-size {
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+.admin-lesson-link {
+  color: #1f2a23;
+  min-width: 0;
+}
+
+.admin-lesson-link:hover { color: var(--green-dark); }
+
+.admin-lesson-link-hint {
+  color: var(--green-dark);
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.admin-lesson-link:hover .admin-lesson-link-hint { opacity: 1; }
+
+/* Multi-course enrollment picker */
+.admin-course-multiselect {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #d6ded5;
+  border-radius: 8px;
+  background: #fff;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.admin-course-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid #d6ded5;
+  border-radius: 999px;
+  font-size: 13.5px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.admin-course-check.checked {
+  background: var(--green-soft);
+  border-color: var(--green);
+  color: var(--green-dark);
+  font-weight: 600;
+}
+
+.admin-course-check input { accent-color: var(--green); }
+
+/* Instructor photo direct upload */
+.admin-photo-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-photo-upload-row input[type='text'],
+.admin-photo-upload-row > input {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-photo-preview {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #d6ded5;
+  flex-shrink: 0;
+}
+
+.admin-photo-upload-btn {
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-photo-upload-btn.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
 .lesson-tab-heading span {
   color: #999;
   font-size: 0.78rem;
@@ -3915,6 +4213,76 @@ span.hl-icon {
   font-size: 0.72rem;
   color: #aac0ab;
   white-space: nowrap;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.aqb-mark-hint:hover {
+  color: var(--green-dark);
+  border-color: #c8d8c8;
+  background: #eef5ee;
+}
+
+button.aqb-opt-label {
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+button.aqb-opt-label:hover {
+  border-color: var(--green);
+  background: #dcebdc;
+}
+
+/* Bulk import panel */
+.aqb-bulk {
+  margin: 0 0 16px;
+  padding: 14px;
+  border: 1px dashed #b9ccba;
+  border-radius: 10px;
+  background: #f7faf6;
+}
+
+.aqb-bulk-help {
+  margin: 0 0 10px;
+  font-size: 0.83rem;
+  color: #4a5a4e;
+  line-height: 1.5;
+}
+
+.aqb-bulk-help code {
+  background: #e8f0e8;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+}
+
+.aqb-bulk textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d6ded5;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.aqb-bulk-errors {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: #b3402e;
+  font-size: 0.8rem;
+}
+
+.aqb-bulk-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .aqb-remove-opt-btn {
@@ -4479,6 +4847,151 @@ span.hl-icon {
   margin-bottom: 1rem;
 }
 
+/* ── Dashboard: My Courses / Completed ───────────────────── */
+.dash-course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.dash-course-card {
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #e2e8e0;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgba(36, 63, 43, 0.06);
+}
+
+.dash-course-thumb {
+  flex: 0 0 72px;
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #eef2e7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-course-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dash-course-thumb-fallback {
+  font-size: 26px;
+  color: var(--green);
+}
+
+.dash-course-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dash-course-title {
+  font-weight: 600;
+  color: #1f2a23;
+  line-height: 1.3;
+}
+
+.dash-course-title:hover { color: var(--green-dark); }
+
+.dash-course-instructor {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.dash-course-progress-track {
+  height: 6px;
+  border-radius: 999px;
+  background: #e8eee6;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.dash-course-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--green);
+}
+
+.dash-course-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.dash-course-continue {
+  color: var(--green-dark);
+  font-weight: 600;
+}
+
+.dash-course-done {
+  color: var(--green-dark);
+  font-weight: 600;
+}
+
+/* ── Dashboard: Profile ──────────────────────────────────── */
+.dash-profile-card {
+  background: #fff;
+  border: 1px solid #e2e8e0;
+  border-radius: 12px;
+  padding: 6px 18px;
+  box-shadow: 0 3px 12px rgba(36, 63, 43, 0.06);
+  max-width: 560px;
+}
+
+.dash-profile-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eef2ee;
+}
+
+.dash-profile-row:last-child { border-bottom: none; }
+
+.dash-profile-row > span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.dash-profile-row strong {
+  color: #1f2a23;
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.dash-profile-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green-dark);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.dash-profile-link:disabled {
+  color: var(--muted);
+  text-decoration: none;
+  cursor: default;
+}
+
 /* ── Status pills (subscriptions / orders) ───────────────── */
 .sub-status {
   display: inline-block;
@@ -4674,9 +5187,15 @@ span.hl-icon {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding-bottom: 1rem;
+  padding: 0.75rem 0 1rem;
   border-bottom: 1px solid #eef2ee;
   margin-bottom: 1.25rem;
+  /* Stays pinned while scrolling a long Surah so the translation/reciter
+     controls are always within reach. */
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: #fff;
 }
 
 .qmr-toolbar-row {
@@ -4866,6 +5385,17 @@ span.hl-icon {
 .qmr-ayah.active .qmr-ayah-play {
   background: var(--green);
   color: #fff;
+}
+
+/* Continuous play (from this ayah to the end of the Surah) */
+.qmr-ayah-play-continuous {
+  font-size: 0.62rem;
+  letter-spacing: -1px;
+}
+
+.qmr-ayah.active .qmr-ayah-play-continuous {
+  background: #fff;
+  color: var(--green-dark);
 }
 
 .qmr-ayah-text {

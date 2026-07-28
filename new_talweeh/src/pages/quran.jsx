@@ -6,7 +6,7 @@ import { PageHeader, PageFooter } from './_shared'
 // string ids, which no longer exist — ignore it.
 const SETTINGS_KEY = 'qmr-settings-v2'
 const DEFAULT_TRANSLATION_ID = 84 // Mufti Taqi Usmani
-const DEFAULT_RECITATION_ID = 7 // Mishari Rashid al-`Afasy
+const DEFAULT_RECITATION_ID = 10 // Sa`ud ash-Shuraym
 
 function loadSettings() {
   try {
@@ -137,7 +137,12 @@ export default function QuranPage() {
 
   const [chapterNumber, setChapterNumber] = useState(initialSettings.chapterNumber || 1)
   const [translationId, setTranslationId] = useState(Number(initialSettings.translationId) || DEFAULT_TRANSLATION_ID)
-  const [recitationId, setRecitationId] = useState(Number(initialSettings.recitationId) || DEFAULT_RECITATION_ID)
+  // Only honor a saved reciter the user explicitly picked — settings are
+  // auto-saved on every visit, so without this flag nobody would ever see a
+  // new default.
+  const [recitationId, setRecitationId] = useState(
+    initialSettings.recitationChosen ? (Number(initialSettings.recitationId) || DEFAULT_RECITATION_ID) : DEFAULT_RECITATION_ID
+  )
   const [script, setScript] = useState(initialSettings.script === 'indopak' ? 'indopak' : 'uthmani')
   const [arabicSize, setArabicSize] = useState(initialSettings.arabicSize || 30)
   const [translationSize, setTranslationSize] = useState(initialSettings.translationSize || 17)
@@ -327,6 +332,23 @@ export default function QuranPage() {
     }
   }
 
+  // Continuous play: start at this ayah and keep going to the end of the
+  // Surah (no stop boundary, unlike playAyah).
+  async function playFromAyah(verseKey) {
+    setAudioState('loading')
+    setAudioErrorMsg(null)
+    try {
+      const track = await loadTrack()
+      const ts = tsForKey(track, verseKey)
+      if (!ts) throw new Error('Audio not found for this ayah')
+      rangeRef.current = null
+      await startPlayback('surah', ts.from, null)
+    } catch (err) {
+      setAudioState('idle')
+      setAudioErrorMsg(String(err.message || err))
+    }
+  }
+
   async function playSurahFromStart() {
     setAudioState('loading')
     setAudioErrorMsg(null)
@@ -510,7 +532,10 @@ export default function QuranPage() {
                 <ReciterPicker
                   recitations={recitations}
                   activeId={recitationId}
-                  onChange={setRecitationId}
+                  onChange={(id) => {
+                    setRecitationId(id)
+                    saveSettings({ recitationChosen: true })
+                  }}
                   disabled={recitations.length === 0}
                 />
               </div>
@@ -582,6 +607,15 @@ export default function QuranPage() {
                           }}
                         >
                           {isActive && audioState === 'playing' ? '⏸' : '▶'}
+                        </button>
+                        <button
+                          type="button"
+                          className="qmr-ayah-play qmr-ayah-play-continuous"
+                          aria-label="Play from this ayah onwards"
+                          title="Play from here to the end of the Surah"
+                          onClick={() => playFromAyah(v.verse_key)}
+                        >
+                          ▶▶
                         </button>
                       </div>
                       <div className="qmr-ayah-text">

@@ -79,6 +79,23 @@ const uploadImage = multer({
   },
 })
 
+// Documents for lesson exercise files (no HTML/SVG — can carry scripts).
+const DOC_MIME_EXT = {
+  'application/pdf': 'pdf',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'application/vnd.ms-powerpoint': 'ppt',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+  'application/zip': 'zip',
+}
+const uploadDoc = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    cb(null, Boolean(DOC_MIME_EXT[file.mimetype]))
+  },
+})
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -798,9 +815,9 @@ app.post('/api/courses', requireAdmin, async (req, res) => {
   try {
     const [result] = await pool.query(
       `INSERT INTO courses
-        (title, slug, description, price, cadence, status, category, instructor_name, instructor_avatar_url, thumbnail_url, level, members_only)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, slug, description || null, price || 0, cadence || null, status || 'Online',
+        (title, slug, description, price, original_price, cadence, status, category, instructor_name, instructor_avatar_url, thumbnail_url, level, members_only)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title, slug, description || null, price || 0, req.body.original_price || null, cadence || null, status || 'Online',
        category || null, instructor_name || null, instructor_avatar_url || null,
        thumbnail_url || null, level || 'Beginner', req.body.members_only ? 1 : 0]
     )
@@ -817,7 +834,7 @@ app.post('/api/courses', requireAdmin, async (req, res) => {
 app.put('/api/courses/:id', requireAdmin, async (req, res) => {
   const courseId = Number(req.params.id)
   if (!Number.isInteger(courseId) || courseId <= 0) return res.status(400).json({ error: 'Invalid course id' })
-  const ALLOWED = ['title', 'description', 'price', 'cadence', 'status', 'category',
+  const ALLOWED = ['title', 'description', 'price', 'original_price', 'cadence', 'status', 'category',
     'instructor_name', 'instructor_avatar_url', 'thumbnail_url', 'level', 'members_only']
   const updates = []
   const values = []
@@ -985,11 +1002,18 @@ app.get('/api/enrollments', requireAdmin, async (req, res) => {
   }
 })
 
-// Grant enrollment (admin)
+// Grant enrollment (admin). Accepts a single course_id or a course_ids array
+// so a student can be enrolled in several courses in one go.
 app.post('/api/enrollments', requireAdmin, async (req, res) => {
-  const { user_email, course_id } = req.body
-  if (!user_email || !course_id) {
-    return res.status(400).json({ error: 'user_email and course_id are required' })
+  const { user_email, course_id, course_ids } = req.body
+  const requestedIds = Array.isArray(course_ids) && course_ids.length > 0
+    ? course_ids.map(Number)
+    : course_id ? [Number(course_id)] : []
+  if (!user_email || requestedIds.length === 0) {
+    return res.status(400).json({ error: 'user_email and at least one course are required' })
+  }
+  if (requestedIds.some((id) => !Number.isInteger(id) || id <= 0)) {
+    return res.status(400).json({ error: 'Invalid course id' })
   }
   try {
     const [users] = await pool.query(
@@ -999,22 +1023,34 @@ app.post('/api/enrollments', requireAdmin, async (req, res) => {
     if (users.length === 0) return res.status(404).json({ error: 'No account found with that email' })
     const targetUser = users[0]
 
-    const [courses] = await pool.query('SELECT id, title FROM courses WHERE id = ?', [course_id])
-    if (courses.length === 0) return res.status(404).json({ error: 'Course not found' })
+    const [courses] = await pool.query('SELECT id, title FROM courses WHERE id IN (?)', [requestedIds])
+    if (courses.length !== requestedIds.length) return res.status(404).json({ error: 'Course not found' })
 
-    const [result] = await pool.query(
-      'INSERT INTO enrollments (user_id, course_id, granted_by) VALUES (?, ?, ?)',
-      [targetUser.id, course_id, req.user.id]
-    )
+    const granted = []
+    const alreadyEnrolled = []
+    for (const course of courses) {
+      try {
+        await pool.query(
+          'INSERT INTO enrollments (user_id, course_id, granted_by) VALUES (?, ?, ?)',
+          [targetUser.id, course.id, req.user.id]
+        )
+        granted.push(course)
+      } catch (err) {
+        if (err.code === 'ER_DUP_ENTRY') alreadyEnrolled.push(course)
+        else throw err
+      }
+    }
+    if (granted.length === 0) {
+      return res.status(409).json({ error: 'This student is already enrolled in the selected course(s)' })
+    }
     res.status(201).json({
-      id: result.insertId,
       user: { id: targetUser.id, name: targetUser.name, email: targetUser.email },
-      course: { id: courses[0].id, title: courses[0].title },
+      courses: granted,
+      alreadyEnrolled,
+      // Back-compat shape for single-course callers.
+      course: granted[0],
     })
   } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ error: 'This student is already enrolled in this course' })
-    }
     console.error(err)
     res.status(500).json({ error: 'Failed to grant enrollment' })
   }
@@ -1076,6 +1112,133 @@ app.post('/api/courses/:id/lessons', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Failed to create lesson' })
+  }
+})
+
+// Partial lesson update (admin) — used by the inline overview editor on the
+// lesson page.
+app.put('/api/lessons/:id', requireAdmin, async (req, res) => {
+  const lessonId = Number(req.params.id)
+  if (!Number.isInteger(lessonId) || lessonId <= 0) return res.status(400).json({ error: 'Invalid lesson id' })
+  const ALLOWED = ['title', 'description', 'youtube_url', 'is_free', 'order_index']
+  const updates = []
+  const values = []
+  for (const field of ALLOWED) {
+    if (field in req.body) {
+      updates.push(`${field} = ?`)
+      values.push(field === 'is_free' ? (req.body.is_free ? 1 : 0) : req.body[field])
+    }
+  }
+  if (updates.length === 0) return res.status(400).json({ error: 'No editable fields provided' })
+  if ('title' in req.body) {
+    if (!req.body.title) return res.status(400).json({ error: 'title cannot be empty' })
+    updates.push('slug = ?')
+    values.push(slugify(req.body.title))
+  }
+  try {
+    const [result] = await pool.query(
+      `UPDATE lessons SET ${updates.join(', ')} WHERE id = ?`,
+      [...values, lessonId]
+    )
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Lesson not found' })
+    const [rows] = await pool.query('SELECT * FROM lessons WHERE id = ?', [lessonId])
+    res.json(rows[0])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to update lesson' })
+  }
+})
+
+// Whether the viewer may access a lesson's paid content (mirrors the gate in
+// GET /api/lessons/:id). Returns true for free lessons, admins, enrolled
+// students, and members on members-only courses.
+async function viewerCanAccessLesson(req, lesson) {
+  if (lesson.is_free) return true
+  const token = req.cookies.token
+  if (!token) return false
+  let payload
+  try {
+    payload = await verifyJwtAndCheckRevocation(token)
+  } catch {
+    return false
+  }
+  if (payload.role === 'admin') return true
+  const [enrRows] = await pool.query(
+    'SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?',
+    [payload.id, lesson.course_id]
+  )
+  if (enrRows.length > 0) return true
+  const [courseRows] = await pool.query('SELECT members_only FROM courses WHERE id = ?', [lesson.course_id])
+  const membersOnly = courseRows.length > 0 && courseRows[0].members_only
+  return Boolean(membersOnly && (await userHasActiveMembership(pool, payload.id, payload.email)))
+}
+
+// ── Lesson exercise files (PDFs etc.) ─────────────────────
+
+app.get('/api/lessons/:id/files', async (req, res) => {
+  try {
+    const [lessons] = await pool.query('SELECT * FROM lessons WHERE id = ?', [req.params.id])
+    if (lessons.length === 0) return res.status(404).json({ error: 'Lesson not found' })
+    if (!(await viewerCanAccessLesson(req, lessons[0]))) {
+      return res.status(403).json({ error: 'enrollment_required' })
+    }
+    const [rows] = await pool.query(
+      'SELECT id, title, url, size_bytes, mime_type, created_at FROM lesson_files WHERE lesson_id = ? ORDER BY created_at ASC',
+      [lessons[0].id]
+    )
+    res.json(rows)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch lesson files' })
+  }
+})
+
+app.post('/api/lessons/:id/files', requireAdmin, uploadDoc.single('file'), async (req, res) => {
+  if (!r2) return res.status(501).json({ error: 'Uploads are not configured on this server.' })
+  if (!req.file) return res.status(400).json({ error: 'No document received (pdf/doc/docx/ppt/pptx/zip, max 25MB).' })
+  try {
+    const [lessons] = await pool.query('SELECT id FROM lessons WHERE id = ?', [req.params.id])
+    if (lessons.length === 0) return res.status(404).json({ error: 'Lesson not found' })
+    const ext = DOC_MIME_EXT[req.file.mimetype]
+    const now = new Date()
+    const yyyy = now.getFullYear()
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    const original = req.file.originalname || `file.${ext}`
+    const base = path.basename(original, path.extname(original))
+      .toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'file'
+    const key = `wp-content/uploads/${yyyy}/${mm}/${base}-${crypto.randomBytes(3).toString('hex')}.${ext}`
+    await r2.send(new PutObjectCommand({
+      Bucket: R2_BUCKET,
+      Key: key,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+      CacheControl: 'public, max-age=31536000, immutable',
+    }))
+    const url = MEDIA_BASE_URL ? `${MEDIA_BASE_URL.replace(/\/$/, '')}/${key}` : `/${key}`
+    const title = (req.body.title || '').trim() || original
+    const [result] = await pool.query(
+      'INSERT INTO lesson_files (lesson_id, title, url, size_bytes, mime_type) VALUES (?, ?, ?, ?, ?)',
+      [lessons[0].id, title, url, req.file.size, req.file.mimetype]
+    )
+    const [rows] = await pool.query(
+      'SELECT id, title, url, size_bytes, mime_type, created_at FROM lesson_files WHERE id = ?',
+      [result.insertId]
+    )
+    res.status(201).json(rows[0])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Upload failed.' })
+  }
+})
+
+app.delete('/api/lesson-files/:id', requireAdmin, async (req, res) => {
+  try {
+    const [result] = await pool.query('DELETE FROM lesson_files WHERE id = ?', [req.params.id])
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'File not found' })
+    res.status(204).end()
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to delete file' })
   }
 })
 
@@ -2070,6 +2233,59 @@ app.get('/api/contact', requireAdmin, async (req, res) => {
 
 // ── Commerce (read-only history) routes ───────────────────
 
+// Courses the signed-in student can access, with progress so the dashboard
+// can split "My Courses" from "Courses Completed".
+app.get('/api/me/courses', requireAuth, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT c.id, c.title, c.slug, c.thumbnail_url, c.instructor_name, c.category, c.status,
+              e.granted_at,
+              COUNT(DISTINCT l.id) AS lesson_count,
+              COUNT(DISTINCT CASE WHEN lp.completed = 1 THEN l.id END) AS completed_count,
+              MIN(CASE WHEN l.order_index >= 0 THEN l.id END) AS first_lesson_id
+         FROM enrollments e
+         JOIN courses c ON c.id = e.course_id
+         LEFT JOIN lessons l ON l.course_id = c.id
+         LEFT JOIN lesson_progress lp ON lp.lesson_id = l.id AND lp.user_id = e.user_id
+        WHERE e.user_id = ?
+        GROUP BY c.id, e.granted_at
+        ORDER BY e.granted_at DESC`,
+      [req.user.id]
+    )
+    res.json(rows.map((r) => ({
+      ...r,
+      completed: r.lesson_count > 0 && Number(r.completed_count) >= Number(r.lesson_count),
+    })))
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch your courses' })
+  }
+})
+
+// Profile info for the dashboard: when they joined and how they last paid.
+app.get('/api/me/profile', requireAuth, async (req, res) => {
+  try {
+    const [users] = await pool.query(
+      'SELECT id, name, username, email, created_at FROM auth_users WHERE id = ?',
+      [req.user.id]
+    )
+    if (users.length === 0) return res.status(404).json({ error: 'Account not found' })
+    const [payments] = await pool.query(
+      `SELECT payment_method FROM orders
+        WHERE (user_id = ? OR billing_email = ?) AND payment_method IS NOT NULL
+        ORDER BY created_at DESC LIMIT 1`,
+      [req.user.id, users[0].email]
+    )
+    res.json({
+      ...users[0],
+      payment_method: payments.length > 0 ? payments[0].payment_method : null,
+    })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch profile' })
+  }
+})
+
 app.get('/api/me/orders', requireAuth, async (req, res) => {
   try {
     const [orders] = await pool.query(
@@ -2746,6 +2962,32 @@ async function ensureStripeSchema() {
   `)
 }
 
+// Discount pricing + inline lesson editing + exercise files.
+async function ensureCourseContentSchema() {
+  if (await tableExists('courses')) {
+    await ensureColumn('courses', 'original_price',
+      "ALTER TABLE courses ADD COLUMN original_price DECIMAL(10,2) NULL COMMENT 'pre-discount price shown crossed out'")
+  }
+  if (await tableExists('lessons')) {
+    await ensureColumn('lessons', 'description',
+      'ALTER TABLE lessons ADD COLUMN description TEXT NULL')
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS lesson_files (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        lesson_id  INT NOT NULL,
+        title      VARCHAR(255) NOT NULL,
+        url        VARCHAR(600) NOT NULL,
+        size_bytes BIGINT NULL,
+        mime_type  VARCHAR(120) NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_lesson_files_lesson (lesson_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `)
+    await ensureForeignKey('lesson_files', 'fk_lesson_files_lesson',
+      'ALTER TABLE lesson_files ADD CONSTRAINT fk_lesson_files_lesson FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE')
+  }
+}
+
 async function ensureContactSchema() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS contact_messages (
@@ -2773,6 +3015,7 @@ async function startServer() {
     await ensureSiteContentSchema()
     await ensureCommerceSchema()
     await ensureStripeSchema()
+    await ensureCourseContentSchema()
     await ensureContactSchema()
     app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`))
   } catch (err) {

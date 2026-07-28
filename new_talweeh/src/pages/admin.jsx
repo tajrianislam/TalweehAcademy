@@ -20,7 +20,7 @@ const CATEGORIES = [
 ]
 
 const BLANK_COURSE = {
-  title: '', description: '', price: '', cadence: '', status: 'Online',
+  title: '', description: '', price: '', original_price: '', cadence: '', status: 'Online',
   category: '', level: 'Beginner', instructor_name: '',
   instructor_avatar_url: '', thumbnail_url: '', members_only: false,
 }
@@ -136,7 +136,11 @@ export function CreateCourseSection({ onCreated }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ ...form, price: parseFloat(form.price) || 0 }),
+        body: JSON.stringify({
+          ...form,
+          price: parseFloat(form.price) || 0,
+          original_price: parseFloat(form.original_price) || null,
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
@@ -172,6 +176,14 @@ export function CreateCourseSection({ onCreated }) {
           <div className="form-row">
             <label>Price (USD)</label>
             <input name="price" type="number" min="0" step="0.01" value={form.price} onChange={handleChange} placeholder="0.00" />
+          </div>
+          <div className="form-row">
+            <label>Original Price (optional)</label>
+            <input
+              name="original_price" type="number" min="0" step="0.01"
+              value={form.original_price} onChange={handleChange}
+              placeholder="Shown crossed out for discounts"
+            />
           </div>
           <div className="form-row">
             <label>Cadence</label>
@@ -612,7 +624,13 @@ export function ManageCoursesSection({ courses, onRefresh }) {
                   <ul className="admin-lesson-list">
                     {course.lessons.map((lesson) => (
                       <li key={lesson.id}>
-                        <span>{lesson.title}{lesson.has_quiz ? ' · quiz' : ''}</span>
+                        <Link
+                          className="admin-lesson-link"
+                          to={`/courses/${course.slug}/lesson/${lesson.id}`}
+                          title="Open the lesson page — edit the overview and upload exercise files there"
+                        >
+                          {lesson.title}{lesson.has_quiz ? ' · quiz' : ''} <span className="admin-lesson-link-hint">Open & edit →</span>
+                        </Link>
                         <button type="button" className="qb-remove-btn" onClick={() => deleteLesson(course, lesson)}>
                           Delete
                         </button>
@@ -638,9 +656,13 @@ export function ManageEnrollmentsSection({ courses }) {
   const [enrollments, setEnrollments] = useState([])
   const [loadingList, setLoadingList] = useState(true)
   const [email, setEmail] = useState('')
-  const [courseId, setCourseId] = useState('')
+  const [courseIds, setCourseIds] = useState([])
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState(null)
+
+  function toggleCourse(id) {
+    setCourseIds((prev) => prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id])
+  }
 
   async function fetchEnrollments() {
     setLoadingList(true)
@@ -656,20 +678,25 @@ export function ManageEnrollmentsSection({ courses }) {
 
   async function handleGrant(e) {
     e.preventDefault()
-    if (!email.trim() || !courseId) return setMsg({ type: 'error', text: 'Email and course are required.' })
+    if (!email.trim() || courseIds.length === 0) return setMsg({ type: 'error', text: 'Email and at least one course are required.' })
     setSaving(true); setMsg(null)
     try {
       const res = await fetch('/api/enrollments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ user_email: email.trim(), course_id: Number(courseId) }),
+        body: JSON.stringify({ user_email: email.trim(), course_ids: courseIds }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setMsg({ type: 'success', text: `Enrolled ${data.user.name} in "${data.course.title}".` })
+      const grantedTitles = (data.courses || []).map((c) => `"${c.title}"`).join(', ')
+      const skipped = (data.alreadyEnrolled || []).length
+      setMsg({
+        type: 'success',
+        text: `Enrolled ${data.user.name} in ${grantedTitles}.${skipped ? ` (${skipped} already enrolled.)` : ''}`,
+      })
       setEmail('')
-      setCourseId('')
+      setCourseIds([])
       fetchEnrollments()
     } catch (err) {
       setMsg({ type: 'error', text: err.message })
@@ -716,13 +743,19 @@ export function ManageEnrollmentsSection({ courses }) {
             />
           </div>
           <div className="form-row">
-            <label>Course *</label>
-            <select value={courseId} onChange={(e) => setCourseId(e.target.value)} required>
-              <option value="">— Select Course —</option>
+            <label>Courses * <small>(select one or more)</small></label>
+            <div className="admin-course-multiselect">
               {courses.map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
+                <label key={c.id} className={`admin-course-check${courseIds.includes(c.id) ? ' checked' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={courseIds.includes(c.id)}
+                    onChange={() => toggleCourse(c.id)}
+                  />
+                  {c.title}
+                </label>
               ))}
-            </select>
+            </div>
           </div>
         </div>
         {msg && <p className={msg.type === 'error' ? 'admin-msg error' : 'admin-msg success'}>{msg.text}</p>}

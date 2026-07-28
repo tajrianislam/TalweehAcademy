@@ -37,6 +37,29 @@ export function InstructorsAdmin() {
   const [editId, setEditId] = useState(null)
   const [msg, setMsg] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [photoUploading, setPhotoUploading] = useState(false)
+
+  // Upload the picture straight to storage; the URL fills itself in.
+  async function uploadPhoto(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setPhotoUploading(true)
+    setMsg(null)
+    try {
+      const body = new FormData()
+      body.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', credentials: 'include', body })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      setForm((prev) => ({ ...prev, photo_url: data.url }))
+      setMsg({ type: 'success', text: 'Photo uploaded — URL filled in below.' })
+    } catch (err) {
+      setMsg({ type: 'error', text: err.message })
+    } finally {
+      setPhotoUploading(false)
+    }
+  }
 
   async function refresh() {
     try { setList(await api('/api/instructors')) } catch { /* noop */ }
@@ -81,8 +104,14 @@ export function InstructorsAdmin() {
             <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
           <div className="form-row"><label>Designation</label>
             <input value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} /></div>
-          <div className="form-row"><label>Photo URL</label>
-            <input value={form.photo_url} onChange={(e) => setForm({ ...form, photo_url: e.target.value })} placeholder="/wp-content/uploads/…" /></div>
+          <div className="form-row"><label>Photo</label>
+            <div className="admin-photo-upload-row">
+              {form.photo_url && <img className="admin-photo-preview" src={form.photo_url} alt="" />}
+              <label className={`outline-btn-green admin-photo-upload-btn${photoUploading ? ' disabled' : ''}`}>
+                {photoUploading ? 'Uploading…' : '⬆ Upload photo'}
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={uploadPhoto} disabled={photoUploading} hidden />
+              </label>
+              <input value={form.photo_url} onChange={(e) => setForm({ ...form, photo_url: e.target.value })} placeholder="…or paste a URL" /></div></div>
           <div className="form-row"><label>Order</label>
             <input type="number" value={form.order_index} onChange={(e) => setForm({ ...form, order_index: Number(e.target.value) })} /></div>
         </div>

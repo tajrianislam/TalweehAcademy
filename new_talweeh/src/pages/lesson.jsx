@@ -49,9 +49,16 @@ function AdminQuizPanel({ lessonId, lesson, onQuizUpdated }) {
 }
 const LESSON_TABS = [
   { id: 'overview', label: 'Overview' },
+  { id: 'files', label: 'Exercise Files' },
   { id: 'notes', label: 'Notes' },
   { id: 'comments', label: 'Comments' },
 ]
+
+function formatFileSize(bytes) {
+  if (!bytes) return ''
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
 
 function formatSeconds(totalSeconds = 0) {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds))
@@ -96,6 +103,14 @@ export default function LessonPage() {
   const [comments, setComments] = useState([])
   const [commentDraft, setCommentDraft] = useState('')
   const [lessonTabsLoading, setLessonTabsLoading] = useState(false)
+  const [files, setFiles] = useState([])
+  const [fileUploading, setFileUploading] = useState(false)
+  const [fileError, setFileError] = useState(null)
+  const [editingOverview, setEditingOverview] = useState(false)
+  const [overviewDraft, setOverviewDraft] = useState('')
+  const [overviewSaving, setOverviewSaving] = useState(false)
+
+  const isAdmin = user?.role === 'admin'
 
   useEffect(() => {
     setLoading(true)
@@ -284,6 +299,13 @@ export default function LessonPage() {
     }
   }
 
+  function resumeFromSaved() {
+    if (!player?.seekTo || !progress?.seconds) return
+    player.seekTo(progress.seconds, true)
+    player.playVideo?.()
+    setResumedAutomatically(true)
+  }
+
   async function startLessonOver() {
     if (player?.seekTo) player.seekTo(0, true)
     setResumeStartSeconds(0)
@@ -295,6 +317,71 @@ export default function LessonPage() {
       watchPercentage: 0,
       completed: false,
     })
+  }
+
+  useEffect(() => {
+    setFiles([])
+    setFileError(null)
+    setEditingOverview(false)
+    fetch(`/api/lessons/${lessonId}/files`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setFiles)
+      .catch(() => setFiles([]))
+  }, [lessonId, user])
+
+  async function saveOverview() {
+    setOverviewSaving(true)
+    try {
+      const res = await fetch(`/api/lessons/${lessonId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ description: overviewDraft }),
+      })
+      if (!res.ok) throw new Error('Failed to save overview')
+      const updated = await res.json()
+      setLesson((prev) => ({ ...prev, description: updated.description }))
+      setEditingOverview(false)
+    } catch {
+      // Keep the editor open so nothing typed is lost.
+    } finally {
+      setOverviewSaving(false)
+    }
+  }
+
+  async function uploadExerciseFile(event) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    setFileUploading(true)
+    setFileError(null)
+    try {
+      const body = new FormData()
+      body.append('file', file)
+      const res = await fetch(`/api/lessons/${lessonId}/files`, {
+        method: 'POST',
+        credentials: 'include',
+        body,
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      setFiles((prev) => [...prev, data])
+    } catch (err) {
+      setFileError(err.message)
+    } finally {
+      setFileUploading(false)
+    }
+  }
+
+  async function deleteExerciseFile(file) {
+    if (!window.confirm(`Delete "${file.title}"?`)) return
+    try {
+      const res = await fetch(`/api/lesson-files/${file.id}`, { method: 'DELETE', credentials: 'include' })
+      if (!res.ok && res.status !== 204) throw new Error('Failed to delete file')
+      setFiles((prev) => prev.filter((f) => f.id !== file.id))
+    } catch (err) {
+      setFileError(err.message)
+    }
   }
 
   function handlePlayerReady(event) {
@@ -544,9 +631,14 @@ export default function LessonPage() {
                         {remainingSeconds > 0 ? ` · ${formatSeconds(remainingSeconds)} left` : ''}
                       </span>
                     </div>
-                    <button type="button" className="outline-btn-green" onClick={startLessonOver}>
-                      Start over
-                    </button>
+                    <div className="lesson-progress-card-actions">
+                      <button type="button" className="journey-button" onClick={resumeFromSaved}>
+                        ▶ Resume
+                      </button>
+                      <button type="button" className="outline-btn-green" onClick={startLessonOver}>
+                        Start over
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -592,8 +684,6 @@ export default function LessonPage() {
                           key={`${videoId}-${resumeStartSeconds}`}
                           videoId={videoId}
                           title={lesson.title}
-                          badge={activeLessonTab === 'overview' ? 'Overview' : lesson.title}
-                          instructor={course.instructor_name}
                           startSeconds={resumeStartSeconds}
                           onReady={handlePlayerReady}
                           onPlay={startTracking}
@@ -634,8 +724,84 @@ export default function LessonPage() {
               <div className="lesson-tab-panel">
                 {activeLessonTab === 'overview' && (
                   <div className="lesson-overview-panel">
-                    <h2>Lesson Overview</h2>
-                    <p>{overviewText}</p>
+                    <div className="lesson-tab-heading">
+                      <h2>Lesson Overview</h2>
+                      {isAdmin && !editingOverview && (
+                        <button
+                          type="button"
+                          className="outline-btn-green"
+                          onClick={() => {
+                            setOverviewDraft(lesson.description || '')
+                            setEditingOverview(true)
+                          }}
+                        >
+                          ✎ Edit overview
+                        </button>
+                      )}
+                    </div>
+                    {isAdmin && editingOverview ? (
+                      <div className="lesson-overview-editor">
+                        <textarea
+                          value={overviewDraft}
+                          onChange={(e) => setOverviewDraft(e.target.value)}
+                          rows={8}
+                          placeholder="Write the lesson overview…"
+                        />
+                        <div className="lesson-overview-editor-actions">
+                          <button type="button" className="journey-button" onClick={saveOverview} disabled={overviewSaving}>
+                            {overviewSaving ? 'Saving…' : 'Save Overview'}
+                          </button>
+                          <button type="button" className="outline-btn-green" onClick={() => setEditingOverview(false)} disabled={overviewSaving}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p style={{ whiteSpace: 'pre-wrap' }}>{overviewText}</p>
+                    )}
+                  </div>
+                )}
+
+                {activeLessonTab === 'files' && (
+                  <div className="lesson-files-panel">
+                    <div className="lesson-tab-heading">
+                      <h2>Exercise Files</h2>
+                      {isAdmin && (
+                        <label className={`outline-btn-green lesson-file-upload-btn${fileUploading ? ' disabled' : ''}`}>
+                          {fileUploading ? 'Uploading…' : '⬆ Upload file'}
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx,.ppt,.pptx,.zip"
+                            onChange={uploadExerciseFile}
+                            disabled={fileUploading}
+                            hidden
+                          />
+                        </label>
+                      )}
+                    </div>
+                    {fileError && <p className="courses-error">{fileError}</p>}
+                    {files.length === 0 ? (
+                      <p className="lesson-tab-muted">
+                        {isAdmin ? 'No exercise files yet — upload a PDF above.' : 'No exercise files for this lesson.'}
+                      </p>
+                    ) : (
+                      <ul className="lesson-files-list">
+                        {files.map((f) => (
+                          <li key={f.id}>
+                            <a href={f.url} target="_blank" rel="noreferrer" download>
+                              <span className="lesson-file-icon">📄</span>
+                              <span className="lesson-file-name">{f.title}</span>
+                              {f.size_bytes ? <span className="lesson-file-size">{formatFileSize(f.size_bytes)}</span> : null}
+                            </a>
+                            {isAdmin && (
+                              <button type="button" className="qb-remove-btn" onClick={() => deleteExerciseFile(f)}>
+                                Delete
+                              </button>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 )}
 

@@ -85,12 +85,13 @@ export const CONTENT_REGISTRY = {
         item: [
           { name: 'title', label: 'Title', type: 'text' },
           { name: 'text', label: 'Text', type: 'textarea' },
+          { name: 'href', label: 'Link (page or URL)', type: 'url' },
         ],
       },
       default: [
-        { title: 'Arabic Program', text: 'A step by step 2 year program to learn the Arabic language.' },
-        { title: 'Talweeh Society', text: 'Get access to our free courses and weekly lessons.' },
-        { title: 'Authorized Instructors', text: 'Qualified instructors navigating your path.' },
+        { title: 'Arabic Program', text: 'A step by step 2 year program to learn the Arabic language.', href: '/courses' },
+        { title: 'Talweeh Society', text: 'Get access to our free courses and weekly lessons.', href: '/membership' },
+        { title: 'Authorized Instructors', text: 'Qualified instructors navigating your path.', href: '/instructors' },
       ],
     },
     featured: {

@@ -52,6 +52,78 @@ function normalizeExistingQuestions(questions) {
   })
 }
 
+// Parses pasted quiz text into questions. Format: questions separated by
+// blank lines; first line is the question, following lines are the options.
+// Mark the correct option with a * (or add an "Answer: B" / "Answer: True"
+// line). Options may be prefixed "A)", "B.", "-", or nothing. Two options
+// reading True / False become a True/False question.
+function parseBulkText(text) {
+  const blocks = text.replace(/\r/g, '').split(/\n\s*\n+/).map((b) => b.trim()).filter(Boolean)
+  const questions = []
+  const errors = []
+  blocks.forEach((block, bi) => {
+    const lines = block.split('\n').map((l) => l.trim()).filter(Boolean)
+    if (lines.length < 2) {
+      errors.push(`Block ${bi + 1}: needs a question line plus its options.`)
+      return
+    }
+    const question = lines[0].replace(/^(?:q(?:uestion)?\s*)?\d+\s*[).:-]\s*/i, '').trim()
+    let answerRef = null
+    const opts = []
+    for (const raw of lines.slice(1)) {
+      const ans = raw.match(/^(?:answer|correct(?:\s+answer)?)\s*[:=-]\s*(.+)$/i)
+      if (ans) { answerRef = ans[1].trim(); continue }
+      let line = raw
+      let correct = false
+      if (/^\*/.test(line)) { correct = true; line = line.replace(/^\*+\s*/, '') }
+      if (/\*+$/.test(line)) { correct = true; line = line.replace(/\s*\*+$/, '') }
+      if (/\((?:correct|right)\)$/i.test(line)) { correct = true; line = line.replace(/\s*\((?:correct|right)\)$/i, '') }
+      const letter = line.match(/^([A-Fa-f])[).:]\s*(.+)$/)
+      let label = null
+      if (letter) { label = letter[1].toUpperCase(); line = letter[2].trim() }
+      else line = line.replace(/^[-•▪]\s*/, '')
+      if (line) opts.push({ label, text: line, correct })
+    }
+    if (answerRef) {
+      const ref = answerRef.replace(/[*.]+$/, '').trim()
+      const byLabel = ref.length <= 2 ? opts.find((o) => o.label === ref.toUpperCase()[0]) : null
+      const byText = opts.find((o) => o.text.toLowerCase() === ref.toLowerCase())
+      const target = byLabel || byText
+      if (target) target.correct = true
+    }
+    const label = question.slice(0, 40)
+    if (opts.length < 2) {
+      errors.push(`"${label}…": needs at least 2 options.`)
+      return
+    }
+    if (!opts.some((o) => o.correct)) {
+      errors.push(`"${label}…": mark the correct answer with * or an "Answer:" line.`)
+      return
+    }
+    const isTf = opts.length === 2 && opts.every((o) => /^(true|false)$/i.test(o.text))
+    questions.push({
+      _id: makeId(),
+      question_text: question,
+      type: isTf ? 'tf' : 'mc',
+      options: opts.map((o) => ({
+        _id: makeId(),
+        option_text: isTf ? o.text[0].toUpperCase() + o.text.slice(1).toLowerCase() : o.text,
+        is_correct: o.correct,
+      })),
+    })
+  })
+  return { questions, errors }
+}
+
+const BULK_PLACEHOLDER = `What is the plural of kitāb?
+A) Kutub *
+B) Kitābāt
+C) Kātib
+
+The word qalam means pen.
+True *
+False`
+
 export default function AdminInlineQuizBuilder({ lessonId, existingQuiz, onSaved, onCancel }) {
   const [questions, setQuestions] = useState(() =>
     existingQuiz?.questions?.length
@@ -61,6 +133,26 @@ export default function AdminInlineQuizBuilder({ lessonId, existingQuiz, onSaved
   const [passPercent, setPassPercent] = useState(existingQuiz?.pass_percent ?? 80)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState(null)
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkText, setBulkText] = useState('')
+  const [bulkErrors, setBulkErrors] = useState([])
+
+  function importBulk() {
+    const { questions: parsed, errors } = parseBulkText(bulkText)
+    setBulkErrors(errors)
+    if (parsed.length === 0) {
+      if (errors.length === 0) setBulkErrors(['Nothing to import — paste questions separated by blank lines.'])
+      return
+    }
+    setQuestions((prev) => {
+      // Drop the initial empty placeholder question if it was never touched.
+      const kept = prev.filter((q) => q.question_text.trim() || q.options.some((o) => o.is_correct))
+      return [...kept, ...parsed]
+    })
+    setBulkText('')
+    if (errors.length === 0) setBulkOpen(false)
+    setMsg({ type: 'success', text: `Imported ${parsed.length} question${parsed.length === 1 ? '' : 's'}.` })
+  }
 
   // ── question mutations ─────────────────────────────────
 
@@ -193,6 +285,13 @@ export default function AdminInlineQuizBuilder({ lessonId, existingQuiz, onSaved
           </div>
         </div>
         <div className="aqb-header-right">
+          <button
+            type="button"
+            className={`aqb-add-q-btn${bulkOpen ? ' active' : ''}`}
+            onClick={() => setBulkOpen((v) => !v)}
+          >
+            📋 Bulk import
+          </button>
           <label className="aqb-pass-label">
             Pass mark
             <div className="aqb-pass-input-wrap">
@@ -209,6 +308,36 @@ export default function AdminInlineQuizBuilder({ lessonId, existingQuiz, onSaved
           </label>
         </div>
       </div>
+
+      {/* Bulk import */}
+      {bulkOpen && (
+        <div className="aqb-bulk">
+          <p className="aqb-bulk-help">
+            Paste all your questions at once — one blank line between questions. The first line is the
+            question; the lines after it are the options. Mark the correct one with a <strong>*</strong>{' '}
+            (or add an <code>Answer: B</code> line). Options that read True / False become True&nbsp;/&nbsp;False questions.
+          </p>
+          <textarea
+            value={bulkText}
+            onChange={(e) => setBulkText(e.target.value)}
+            placeholder={BULK_PLACEHOLDER}
+            rows={10}
+          />
+          {bulkErrors.length > 0 && (
+            <ul className="aqb-bulk-errors">
+              {bulkErrors.map((err) => <li key={err}>{err}</li>)}
+            </ul>
+          )}
+          <div className="aqb-bulk-actions">
+            <button type="button" className="journey-button" onClick={importBulk} disabled={!bulkText.trim()}>
+              Import Questions
+            </button>
+            <button type="button" className="outline-btn-green" onClick={() => { setBulkOpen(false); setBulkErrors([]) }}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Questions */}
       <div className="aqb-questions">
@@ -264,25 +393,22 @@ export default function AdminInlineQuizBuilder({ lessonId, existingQuiz, onSaved
                 <div
                   key={opt._id}
                   className={`aqb-opt-row${opt.is_correct ? ' correct' : ''}`}
-                  onClick={() => setCorrect(q._id, opt._id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && setCorrect(q._id, opt._id)}
                 >
                   <div className="aqb-opt-left">
-                    <span className={`aqb-opt-label${opt.is_correct ? ' correct' : ''}`}>
+                    <button
+                      type="button"
+                      className={`aqb-opt-label${opt.is_correct ? ' correct' : ''}`}
+                      onClick={() => setCorrect(q._id, opt._id)}
+                      title="Mark as the correct answer"
+                    >
                       {q.type === 'tf' ? opt.option_text.charAt(0) : OPTION_LABELS[oi] || oi + 1}
-                    </span>
+                    </button>
                     {q.type === 'mc' ? (
                       <input
                         className="aqb-opt-text-input"
                         placeholder={`Answer option ${OPTION_LABELS[oi] || oi + 1}`}
                         value={opt.option_text}
-                        onChange={(e) => {
-                          e.stopPropagation()
-                          updateOptionText(q._id, opt._id, e.target.value)
-                        }}
-                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => updateOptionText(q._id, opt._id, e.target.value)}
                       />
                     ) : (
                       <span className="aqb-opt-text-static">{opt.option_text}</span>
@@ -297,13 +423,19 @@ export default function AdminInlineQuizBuilder({ lessonId, existingQuiz, onSaved
                         Correct
                       </span>
                     ) : (
-                      <span className="aqb-mark-hint">Set correct</span>
+                      <button
+                        type="button"
+                        className="aqb-mark-hint"
+                        onClick={() => setCorrect(q._id, opt._id)}
+                      >
+                        Set correct
+                      </button>
                     )}
                     {q.type === 'mc' && q.options.length > 2 && (
                       <button
                         type="button"
                         className="aqb-remove-opt-btn"
-                        onClick={(e) => { e.stopPropagation(); removeOption(q._id, opt._id) }}
+                        onClick={() => removeOption(q._id, opt._id)}
                         title="Remove option"
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

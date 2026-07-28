@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { PageHeader, PageHero, PageFooter } from './_shared'
 import { useAuth } from '../context/AuthContext'
@@ -16,6 +16,8 @@ export default function CourseLandingPage() {
   const [buying, setBuying] = useState(false)
   const [buyError, setBuyError] = useState(null)
   const canceled = searchParams.get('canceled') === '1'
+  const buyIntent = searchParams.get('buy') === '1'
+  const autoBuyFired = useRef(false)
 
   useEffect(() => {
     fetch('/api/payments/config')
@@ -64,6 +66,16 @@ export default function CourseLandingPage() {
       .then((data) => setEnrolled(Boolean(data.enrolled)))
       .catch(() => setEnrolled(false))
   }, [authLoading, user, slug])
+
+  // Arriving from a price click (?buy=1): jump straight into checkout — or the
+  // login modal first if the visitor isn't signed in yet.
+  useEffect(() => {
+    if (!buyIntent || autoBuyFired.current || authLoading || loading || !course) return
+    if (enrolled || Number(course.price) <= 0 || !stripeEnabled) return
+    autoBuyFired.current = true
+    handleBuy()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buyIntent, authLoading, loading, course, enrolled, stripeEnabled])
 
   if (loading) return (
     <div className="page-shell">
@@ -180,6 +192,9 @@ export default function CourseLandingPage() {
 
             <div className="course-sidebar-meta">
               <div className="course-price-block">
+                {Number(course.original_price) > Number(course.price) && (
+                  <s className="price-original">${Number(course.original_price).toFixed(2)}</s>
+                )}
                 <span className="course-price">${Number(course.price).toFixed(2)}</span>
                 {course.cadence && <span className="course-cadence">{course.cadence}</span>}
                 <em className="course-currency">[USD]</em>

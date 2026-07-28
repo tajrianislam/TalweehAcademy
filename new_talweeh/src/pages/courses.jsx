@@ -1,8 +1,8 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { PageHeader, PageHero, PageFooter } from './_shared'
 import { ASSET } from '../constants/assets'
+import CourseCard from '../components/CourseCard'
 
 const CATEGORIES = [
   'All',
@@ -31,38 +31,6 @@ function CategoryFilter({ active, onChange }) {
         </button>
       ))}
     </div>
-  )
-}
-
-function CourseCard({ course }) {
-  return (
-    <article className="course-card">
-      <div className="course-art">
-        {course.thumbnail_url
-          ? <img src={course.thumbnail_url} alt={course.title} />
-          : <div className="course-art-placeholder" />}
-        {course.instructor_name && (
-          <div className="instructor-strip">
-            {course.instructor_avatar_url && <img src={course.instructor_avatar_url} alt="" />}
-            <div>
-              <strong>{course.instructor_name}</strong>
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="course-body">
-        <h2>{course.title}</h2>
-        <div className="price-line">
-          <strong>${Number(course.price).toFixed(2)}</strong>
-          {course.cadence && <span>{course.cadence}</span>}
-          <em>[USD]</em>
-        </div>
-        <div className="course-footer">
-          <Link to={`/courses/${course.slug}`}>View Course</Link>
-          <span>{course.status}</span>
-        </div>
-      </div>
-    </article>
   )
 }
 

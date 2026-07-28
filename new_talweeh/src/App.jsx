@@ -1,7 +1,9 @@
 /* eslint-disable react/prop-types */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import { Link, Route, Routes } from 'react-router-dom'
+import CourseCard from './components/CourseCard'
+import VideoFacade from './components/VideoFacade'
 import CoursesPage from './pages/courses'
 import ServicesPage from './pages/services'
 import ServiceDetailPage from './pages/service-detail'
@@ -53,36 +55,39 @@ function PeopleIcon() {
   )
 }
 
-function FeaturedCourseCard({ course }) {
+// One row of 4 cards that auto-scrolls through all courses; pauses while the
+// user hovers or touches it.
+function FeaturedCourseCarousel({ courses }) {
+  const trackRef = useRef(null)
+  const pausedRef = useRef(false)
+
+  useEffect(() => {
+    if (courses.length <= 4) return
+    const timer = setInterval(() => {
+      const track = trackRef.current
+      if (!track || pausedRef.current) return
+      const card = track.querySelector('.course-card')
+      if (!card) return
+      const step = card.offsetWidth + 22
+      const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - step / 2
+      track.scrollTo({ left: atEnd ? 0 : track.scrollLeft + step, behavior: 'smooth' })
+    }, 3500)
+    return () => clearInterval(timer)
+  }, [courses.length])
+
   return (
-    <article className="course-card">
-      <div className="course-art">
-        {course.thumbnail_url
-          ? <img src={course.thumbnail_url} alt={course.title} />
-          : <div className="course-art-placeholder" />}
-        {course.instructor_name && (
-          <div className="instructor-strip">
-            {course.instructor_avatar_url && <img src={course.instructor_avatar_url} alt="" />}
-            <div>
-              <strong>{course.instructor_name}</strong>
-              {course.category && <span>{course.category}</span>}
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="course-body">
-        <h2>{course.title}</h2>
-        <div className="price-line">
-          <strong>${Number(course.price).toFixed(2)}</strong>
-          {course.cadence && <span>{course.cadence}</span>}
-          <em>[USD]</em>
-        </div>
-        <div className="course-footer">
-          <Link to={`/courses/${course.slug}`}>View Course</Link>
-          <span>{course.status}</span>
-        </div>
-      </div>
-    </article>
+    <div
+      className="landing-featured-carousel"
+      ref={trackRef}
+      onMouseEnter={() => { pausedRef.current = true }}
+      onMouseLeave={() => { pausedRef.current = false }}
+      onTouchStart={() => { pausedRef.current = true }}
+      onTouchEnd={() => { pausedRef.current = false }}
+    >
+      {courses.map((course) => (
+        <CourseCard key={course.id} course={course} showCategory />
+      ))}
+    </div>
   )
 }
 
@@ -115,7 +120,7 @@ function LandingPage() {
   useEffect(() => {
     fetch('/api/courses')
       .then((r) => (r.ok ? r.json() : []))
-      .then((data) => setCourses(data.filter((c) => c.status !== 'Hidden').slice(0, 6)))
+      .then((data) => setCourses(data.filter((c) => c.status !== 'Hidden')))
       .catch(() => setCourses([]))
     fetch('/api/articles')
       .then((r) => (r.ok ? r.json() : []))
@@ -187,13 +192,25 @@ function LandingPage() {
         {/* ── Feature Highlights ───────────────────── */}
         <Editable page="landing" sectionKey="highlights">
           <section className="landing-highlights">
-            {c.highlights.map((h, i) => (
-              <article key={h.title}>
-                {i === 0 ? <span className="hl-icon hl-icon-arabic">العربية</span> : i === 1 ? <MasjidIcon /> : <PeopleIcon />}
-                <h3>{h.title}</h3>
-                <p>{h.text}</p>
-              </article>
-            ))}
+            {c.highlights.map((h, i) => {
+              const icon = i === 0 ? <span className="hl-icon hl-icon-arabic">العربية</span> : i === 1 ? <MasjidIcon /> : <PeopleIcon />
+              const body = (
+                <>
+                  {icon}
+                  <h3>{h.title}</h3>
+                  <p>{h.text}</p>
+                </>
+              )
+              const href = h.href || '#'
+              const isExternal = /^https?:\/\//.test(href)
+              return (
+                <article key={h.title}>
+                  {isExternal
+                    ? <a className="highlight-link" href={href} target="_blank" rel="noreferrer">{body}</a>
+                    : <Link className="highlight-link" to={href}>{body}</Link>}
+                </article>
+              )
+            })}
           </section>
         </Editable>
 
@@ -202,11 +219,7 @@ function LandingPage() {
           <section className="landing-featured">
             <h2>{c.featured.heading}</h2>
             <img className="section-divider" src={`${ASSET}/2024/08/border3.svg`} alt="" />
-            <div className="landing-featured-grid">
-              {courses.map((course) => (
-                <FeaturedCourseCard key={course.id} course={course} />
-              ))}
-            </div>
+            <FeaturedCourseCarousel courses={courses} />
             <Link className="green-button" to="/courses">
               {c.featured.buttonLabel}
             </Link>
@@ -266,6 +279,24 @@ function LandingPage() {
           </section>
         </Editable>
 
+        {/* ── YouTube ──────────────────────────────── */}
+        <Editable page="landing" sectionKey="youtube">
+          <section className="landing-youtube">
+            <h2>{c.youtube.heading}</h2>
+            <img className="section-divider" src={`${ASSET}/2024/08/border3.svg`} alt="" />
+            {c.youtube.videos && c.youtube.videos.length > 0 && (
+              <div className="youtube-row">
+                {c.youtube.videos.map((src) => (
+                  <VideoFacade key={src} src={src} title="Talweeh Academy video" />
+                ))}
+              </div>
+            )}
+            <a className="youtube-btn" href={c.youtube.url} target="_blank" rel="noreferrer">
+              {c.youtube.buttonLabel}
+            </a>
+          </section>
+        </Editable>
+
         {/* ── Join Talweeh Society ─────────────────── */}
         <Editable page="landing" sectionKey="joinSociety">
           <section className="landing-join-society">
@@ -279,32 +310,6 @@ function LandingPage() {
                 {c.joinSociety.buttonLabel}
               </a>
             </div>
-          </section>
-        </Editable>
-
-        {/* ── YouTube ──────────────────────────────── */}
-        <Editable page="landing" sectionKey="youtube">
-          <section className="landing-youtube">
-            <h2>{c.youtube.heading}</h2>
-            <img className="section-divider" src={`${ASSET}/2024/08/border3.svg`} alt="" />
-            {c.youtube.videos && c.youtube.videos.length > 0 && (
-              <div className="youtube-grid">
-                {c.youtube.videos.map((src) => (
-                  <div className="youtube-embed" key={src}>
-                    <iframe
-                      src={src}
-                      title="Talweeh Academy video"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      loading="lazy"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-            <a className="youtube-btn" href={c.youtube.url} target="_blank" rel="noreferrer">
-              {c.youtube.buttonLabel}
-            </a>
           </section>
         </Editable>
 
