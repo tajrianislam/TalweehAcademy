@@ -5073,45 +5073,109 @@ button.aqb-opt-label:hover {
 }
 
 .qmr-shell main {
-  padding-bottom: 6.5rem; /* room for the fixed audio bar */
+  padding-bottom: 6rem; /* room for the slim fixed player */
 }
 
-.qmr-hero {
-  max-width: 760px;
+/* ── Sticky surah bar (quran.com-style) ──────────────────── */
+.qmr-subbar {
+  position: sticky;
+  top: var(--qmr-subbar-top, 0px);
+  z-index: 40;
+  background: #fff;
+  border-bottom: 1px solid #e4e9e2;
+}
+
+.qmr-subbar-inner {
+  position: relative;
+  max-width: 860px;
   margin: 0 auto;
-  padding: 2.5rem 1.5rem 1rem;
-  text-align: center;
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.qmr-hero h1 {
-  color: var(--green-dark);
-  font-family: 'Talweeh Cinzel', Georgia, serif;
+.qmr-surah-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f2a23;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 8px;
 }
 
-.qmr-hero p {
+.qmr-surah-select:hover { background: #f2f6f1; }
+
+.qmr-caret {
+  font-size: 10px;
   color: var(--muted);
 }
 
-.qmr-layout {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 1.5rem;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 1.5rem 2rem;
-  align-items: start;
+.qmr-subbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.qmr-sidebar {
-  position: sticky;
-  top: 1rem;
+.qmr-subbar-meta {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.qmr-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 17px;
+  color: #3a4a40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qmr-icon-btn:hover { background: #f2f6f1; }
+
+.qmr-surah-dropdown {
+  position: absolute;
+  top: calc(100% + 1px);
+  left: 16px;
+  z-index: 41;
+  width: min(420px, calc(100vw - 32px));
+  max-height: min(70vh, 520px);
   background: #fff;
   border: 1px solid #e4e9e2;
-  border-radius: 10px;
-  max-height: calc(100vh - 2rem);
+  border-radius: 12px;
+  box-shadow: 0 18px 44px rgba(20, 35, 25, 0.2);
   overflow: hidden;
   display: flex;
+}
+
+.qmr-surah-dropdown .qmr-chapter-list {
+  display: flex;
   flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+.qmr-surah-dropdown .qmr-chapter-list ul {
+  overflow-y: auto;
+}
+
+.qmr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  background: rgba(15, 25, 18, 0.28);
 }
 
 .qmr-chapter-list {
@@ -5202,90 +5266,279 @@ button.aqb-opt-label:hover {
   font-size: 1rem;
 }
 
-.qmr-reader {
-  background: #fff;
-  border: 1px solid #e4e9e2;
-  border-radius: 10px;
-  padding: 1.5rem;
+/* ── Reader column ───────────────────────────────────────── */
+.qmr-reader-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 20px 16px 0;
+}
+
+/* ── Surah header card ───────────────────────────────────── */
+.qmr-surah-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8faf7;
+  border: 1px solid #e7ece6;
+  border-radius: 14px;
+  padding: 24px 14px;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.qmr-surah-head-body {
+  flex: 1;
   min-width: 0;
 }
 
-.qmr-toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #eef2ee;
-  margin-bottom: 1.25rem;
+.qmr-surah-head-arabic {
+  margin: 0 0 2px;
+  font-family: 'Talweeh Naskh', serif;
+  font-size: 36px;
+  line-height: 1.3;
+  color: #1f2a23;
 }
 
-/* Floating shortcut back to the translation/reciter controls, shown once the
-   toolbar has scrolled out of view. Sits above the fixed audio bar. */
-.qmr-jump-top {
-  position: fixed;
-  right: 18px;
-  bottom: 120px;
-  z-index: 40;
+.qmr-surah-head h1 {
+  margin: 0 0 4px;
+  font-size: 1.3rem;
+  color: var(--green-dark);
+}
+
+.qmr-surah-head-meta {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.qmr-surah-head-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.qmr-play-surah {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 10px 16px;
+  gap: 8px;
+  padding: 10px 22px;
   border: none;
   border-radius: 999px;
   background: var(--green);
   color: #fff;
-  font: inherit;
+  font-family: inherit;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 22px rgba(30, 48, 34, 0.3);
   transition: background 150ms ease;
 }
 
-.qmr-jump-top:hover { background: var(--green-dark); }
+.qmr-play-surah:hover { background: var(--green-dark); }
+.qmr-play-surah:disabled { opacity: 0.6; cursor: default; }
 
-.qmr-toolbar-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+.qmr-surah-nav {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid #dbe3da;
+  background: #fff;
+  color: var(--green-dark);
+  font-size: 20px;
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
 }
 
-.qmr-select {
+.qmr-surah-nav:hover:not(:disabled) { background: #eef5ee; }
+.qmr-surah-nav:disabled { opacity: 0.35; cursor: default; }
+
+/* ── Ayah rows (quran.com-style) ─────────────────────────── */
+.qmr-ayah-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.qmr-ayah {
+  padding: 18px 6px 20px;
+  border-bottom: 1px solid #edf1ec;
+  border-radius: 6px;
+}
+
+.qmr-ayah.active {
+  background: #f2f8f1;
+}
+
+.qmr-ayah-toprow {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.qmr-ayah-key {
+  color: var(--green-dark);
+  font-weight: 600;
+  font-size: 13px;
+  min-width: 34px;
+}
+
+.qmr-ayah-play {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: #55655a;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0.85rem;
+}
+
+.qmr-ayah-play:hover {
+  background: #e9f1e8;
+  color: var(--green-dark);
+}
+
+.qmr-ayah.active .qmr-ayah-play {
+  color: var(--green-dark);
+}
+
+.qmr-ayah-play-continuous {
+  font-size: 0.6rem;
+  letter-spacing: -1px;
+}
+
+.qmr-ayah-text {
+  min-width: 0;
+}
+
+.qmr-arabic {
+  font-family: 'Talweeh Naskh', serif;
+  font-size: var(--qmr-arabic-size, 30px);
+  line-height: 2.1;
+  text-align: right;
+  color: var(--ink);
+  margin: 0 0 0.5rem;
+}
+
+.qmr-translation {
+  font-size: var(--qmr-translation-size, 17px);
+  color: var(--muted);
+  margin: 0;
+}
+
+.qmr-status {
+  text-align: center;
+  color: var(--muted);
+  padding: 2rem 0;
+}
+
+.qmr-status.qmr-error {
+  color: var(--red);
+}
+
+.qmr-empty {
+  padding: 0.75rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* ── Settings drawer ─────────────────────────────────────── */
+.qmr-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  width: min(380px, 100%);
+  background: #fff;
+  box-shadow: -14px 0 44px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.qmr-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #eef2ee;
+}
+
+.qmr-drawer-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #1f2a23;
+}
+
+.qmr-drawer-body {
+  padding: 18px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.qmr-drawer-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qmr-drawer-inline {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.qmr-drawer-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
-.qmr-select select {
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
+.qmr-drawer-group select {
+  padding: 9px 10px;
   border: 1px solid #d6ded5;
+  border-radius: 8px;
   font-family: inherit;
-  /* Long translation names must never widen the layout on small screens. */
+  font-size: 14px;
   min-width: 0;
   max-width: 100%;
 }
 
-.qmr-font-control {
-  display: flex;
+.qmr-stepper {
+  display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  color: var(--muted);
+  gap: 12px;
 }
 
-.qmr-font-control button {
-  width: 1.7rem;
-  height: 1.7rem;
-  border-radius: 6px;
+.qmr-stepper span {
+  min-width: 2ch;
+  text-align: center;
+  font-weight: 600;
+  color: #1f2a23;
+}
+
+.qmr-stepper button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   border: 1px solid #d6ded5;
   background: #fff;
   cursor: pointer;
-  font-weight: 700;
+  font-size: 15px;
+  color: var(--green-dark);
 }
+
+.qmr-stepper button:hover { background: #eef5ee; }
 
 .qmr-reciter-picker {
   position: relative;
@@ -5352,334 +5605,165 @@ button.aqb-opt-label:hover {
   color: #fff;
 }
 
-.qmr-surah-header {
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-.qmr-surah-header h2 {
-  color: var(--green-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.qmr-surah-arabic {
-  font-family: 'Talweeh Naskh', serif;
-  font-size: 1.4rem;
-  color: var(--ink);
-}
-
-.qmr-surah-header p {
-  color: var(--muted);
-  font-size: 0.85rem;
-  margin-top: 0.35rem;
-}
-
-.qmr-ayah-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.qmr-ayah {
-  display: flex;
-  gap: 1rem;
-  padding: 1.1rem 0.5rem;
-  border-bottom: 1px solid #eef2ee;
-  border-radius: 8px;
-  transition: background 0.2s ease;
-}
-
-.qmr-ayah.active {
-  background: var(--green-soft);
-}
-
-.qmr-ayah-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.qmr-ayah-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.8rem;
-  height: 1.8rem;
-  border-radius: 50%;
-  background: var(--green-soft);
-  color: var(--green-dark);
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.qmr-ayah-play {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  border: 1px solid var(--green);
-  background: #fff;
-  color: var(--green-dark);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.qmr-ayah.active .qmr-ayah-play {
-  background: var(--green);
-  color: #fff;
-}
-
-/* Continuous play (from this ayah to the end of the Surah) */
-.qmr-ayah-play-continuous {
-  font-size: 0.62rem;
-  letter-spacing: -1px;
-}
-
-.qmr-ayah.active .qmr-ayah-play-continuous {
-  background: #fff;
-  color: var(--green-dark);
-}
-
-.qmr-ayah-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.qmr-arabic {
-  font-family: 'Talweeh Naskh', serif;
-  font-size: var(--qmr-arabic-size, 30px);
-  line-height: 2.1;
-  text-align: right;
-  color: var(--ink);
-  margin: 0 0 0.5rem;
-}
-
-.qmr-translation {
-  font-size: var(--qmr-translation-size, 17px);
-  color: var(--muted);
-  margin: 0;
-}
-
-.qmr-status {
-  text-align: center;
-  color: var(--muted);
-  padding: 2rem 0;
-}
-
-.qmr-status.qmr-error {
-  color: var(--red);
-}
-
-.qmr-empty {
-  padding: 0.75rem;
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.qmr-audio-bar {
+/* ── Slim audio player ───────────────────────────────────── */
+.qmr-player {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 30;
+  z-index: 45;
   background: #fff;
   border-top: 1px solid #e0e6df;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
-  padding: 0.65rem 1.25rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
+  padding: 0 14px calc(8px + env(safe-area-inset-bottom, 0px));
 }
 
-.qmr-audio-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.qmr-audio-controls button {
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 50%;
-  border: 1px solid #d6ded5;
-  background: #fff;
+.qmr-player-seek {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 4px;
+  margin: 10px 0 8px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--green) var(--qmr-seek-fill, 0%), #e4e9e2 var(--qmr-seek-fill, 0%));
   cursor: pointer;
+}
+
+.qmr-player-seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--green-dark);
+  border: none;
+}
+
+.qmr-player-seek::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--green-dark);
+  border: none;
+}
+
+.qmr-player-row {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.qmr-player-time {
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 44px;
+  white-space: nowrap;
+}
+
+.qmr-player-time-right { text-align: right; }
+
+.qmr-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qmr-player-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 15px;
+  color: #2a3a30;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.qmr-audio-controls button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+.qmr-player-btn:hover { background: #eef3ed; }
+.qmr-player-btn:disabled { opacity: 0.35; cursor: default; }
 
-.qmr-audio-main {
-  width: 2.7rem !important;
-  height: 2.7rem !important;
-  background: var(--green) !important;
-  border-color: var(--green) !important;
+.qmr-player-main {
+  width: 42px;
+  height: 42px;
+  background: var(--green);
   color: #fff;
 }
 
-.qmr-audio-meta {
-  font-size: 0.85rem;
-  color: var(--muted);
-  min-width: 120px;
+.qmr-player-main:hover { background: var(--green-dark); }
+
+.qmr-player-menu-wrap { position: relative; }
+
+.qmr-player-menu {
+  position: absolute;
+  bottom: 46px;
+  left: 0;
+  width: 210px;
+  background: #fff;
+  border: 1px solid #e4e9e2;
+  border-radius: 10px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.16);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13.5px;
+  color: #2a3a30;
 }
 
-.qmr-audio-toggles {
+.qmr-player-menu label {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-left: auto;
-  font-size: 0.8rem;
-  color: var(--muted);
-  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.qmr-audio-toggles label {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  white-space: nowrap;
-}
+.qmr-player-menu-row { justify-content: space-between; }
 
-.qmr-speed select {
-  padding: 0.35rem 0.5rem;
-  border-radius: 6px;
+.qmr-player-menu select {
+  padding: 4px 6px;
   border: 1px solid #d6ded5;
+  border-radius: 6px;
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 13px;
 }
 
-.qmr-volume input[type="range"] {
-  width: 80px;
-  accent-color: var(--green);
-}
+.qmr-player-volume input { width: 90px; accent-color: var(--green); }
 
-.qmr-audio-error {
-  flex-basis: 100%;
+.qmr-player-error {
+  margin: 0 0 8px;
   color: var(--red);
-  font-size: 0.8rem;
+  font-size: 12.5px;
+  text-align: center;
 }
 
-@media (max-width: 860px) {
-  .qmr-layout {
-    grid-template-columns: 1fr;
-  }
+.qmr-player-error-only { padding-top: 8px; }
 
-  .qmr-sidebar {
-    position: static;
-    max-height: 320px;
-  }
-
-  .qmr-audio-toggles {
-    margin-left: 0;
-  }
-}
-
+/* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 560px) {
-  .qmr-hero {
-    padding: 1.5rem 1rem 0.75rem;
+  .qmr-subbar-meta { display: none; }
+
+  .qmr-surah-dropdown {
+    left: 8px;
+    width: calc(100vw - 16px);
   }
 
-  .qmr-toolbar-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
+  .qmr-surah-head {
+    padding: 18px 8px;
+    gap: 6px;
   }
 
-  .qmr-select {
-    width: 100%;
-  }
+  .qmr-surah-head-arabic { font-size: 30px; }
+  .qmr-surah-head h1 { font-size: 1.12rem; }
 
-  .qmr-select select {
-    flex: 1;
-  }
+  .qmr-reader-page { padding: 14px 10px 0; }
 
-  .qmr-reciter-picker,
-  .qmr-reciter-toggle {
-    width: 100%;
-  }
+  .qmr-shell main { padding-bottom: 7rem; }
 
-  /* Compact two-row audio bar: transport + range on top, toggles below.
-     Volume is hidden — phones have hardware volume buttons. */
-  .qmr-audio-bar {
-    gap: 0.5rem 0.9rem;
-    padding: 0.55rem 0.75rem;
-    justify-content: center;
-  }
-
-  .qmr-audio-controls {
-    order: 1;
-  }
-
-  .qmr-audio-controls button {
-    width: 2rem;
-    height: 2rem;
-  }
-
-  .qmr-audio-main {
-    width: 2.4rem !important;
-    height: 2.4rem !important;
-  }
-
-  .qmr-range {
-    order: 2;
-  }
-
-  .qmr-range input[type='number'] {
-    width: 46px;
-    padding: 5px 4px;
-  }
-
-  .qmr-audio-meta {
-    display: none;
-  }
-
-  .qmr-audio-toggles {
-    order: 3;
-    width: 100%;
-    flex-direction: row;
-    justify-content: center;
-    gap: 0.9rem;
-    margin-left: 0;
-  }
-
-  /* Phones have hardware volume buttons — skip the slider. */
-  .qmr-audio-toggles .qmr-volume {
-    display: none;
-  }
-
-  .qmr-jump-top {
-    right: 12px;
-    bottom: 132px;
-    padding: 9px 14px;
-    font-size: 13px;
-  }
-
-  .qmr-ayah {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .qmr-ayah-controls {
-    flex-direction: row;
-    justify-content: flex-start;
-  }
-
-  .qmr-shell main {
-    padding-bottom: 12.5rem; /* taller stacked audio bar on phones */
-  }
+  .qmr-player-time { min-width: 36px; }
 }
 
 
@@ -6749,11 +6833,6 @@ button.aqb-opt-label:hover {
 
   .hero h1 {
     font-size: 1.7rem;
-  }
-
-  .qmr-audio-bar {
-    gap: 8px;
-    padding: 8px 10px;
   }
 
   .edit-fab {

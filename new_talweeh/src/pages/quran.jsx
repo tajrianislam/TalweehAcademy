@@ -162,9 +162,14 @@ export default function QuranPage() {
   const [rangeFrom, setRangeFrom] = useState(1)
   const [rangeTo, setRangeTo] = useState(1)
 
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [playerMenuOpen, setPlayerMenuOpen] = useState(false)
+  const [audioPos, setAudioPos] = useState({ t: 0, d: 0 })
+
   const audioRef = useRef(null)
-  const toolbarRef = useRef(null)
-  const [showJumpTop, setShowJumpTop] = useState(false)
+  const subbarRef = useRef(null)
+  const audioPosSecRef = useRef(-1)
   const ayahRefs = useRef(new Map())
   // Gapless track for the current chapter+reciter: one MP3 for the whole
   // Surah plus per-ayah millisecond timestamps. No per-verse file swaps.
@@ -183,22 +188,21 @@ export default function QuranPage() {
   const activeChapterInfo = chapters.find((c) => c.id === chapterNumber)
   const verseCount = activeChapterInfo?.verse_count || 1
 
-  // Show a floating "back to settings" shortcut once the toolbar has
-  // scrolled out of view, so the translation/reciter controls are reachable
-  // from deep inside a long Surah.
+  // The site header is sticky; the surah bar sticks just below it
+  // (quran.com-style). Track the header's live height.
   useEffect(() => {
-    function onScroll() {
-      const toolbar = toolbarRef.current
-      if (!toolbar) return
-      setShowJumpTop(toolbar.getBoundingClientRect().bottom < 0)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-    return () => window.removeEventListener('scroll', onScroll)
+    const subbar = subbarRef.current
+    const header = document.querySelector('.site-header')
+    if (!subbar || !header) return
+    const apply = () => subbar.style.setProperty('--qmr-subbar-top', `${header.offsetHeight}px`)
+    apply()
+    const observer = new ResizeObserver(apply)
+    observer.observe(header)
+    return () => observer.disconnect()
   }, [])
 
-  function jumpToToolbar() {
-    toolbarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  function goToChapter(offset) {
+    setChapterNumber((n) => Math.min(114, Math.max(1, n + offset)))
   }
 
   useEffect(() => {
@@ -305,9 +309,31 @@ export default function QuranPage() {
     stopAtMsRef.current = null
     rangeRef.current = null
     currentKeyRef.current = null
+    audioPosSecRef.current = -1
     setAudioState('idle')
     setAudioMode(null)
     setCurrentAyahKey(null)
+    setPlayerMenuOpen(false)
+    setAudioPos({ t: 0, d: 0 })
+  }
+
+  // Manual scrub on the player's seek bar. Clears any ayah/range stop
+  // boundary — once the listener takes the wheel, play through to the end.
+  function seekTo(seconds) {
+    const el = audioRef.current
+    if (!el) return
+    stopAtMsRef.current = null
+    rangeRef.current = null
+    audioModeRef.current = 'surah'
+    setAudioMode('surah')
+    el.currentTime = seconds
+    updateCurrentAyah(seconds * 1000)
+    setAudioPos((p) => ({ ...p, t: seconds }))
+  }
+
+  function formatTime(totalSeconds = 0) {
+    const s = Math.max(0, Math.floor(totalSeconds))
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
   }
 
   function pauseAudio() {
@@ -440,6 +466,13 @@ export default function QuranPage() {
     if (!el || !track || el.paused) return
     const ms = el.currentTime * 1000
 
+    // Feed the slim player's seek bar (1s granularity to keep rerenders cheap).
+    const wholeSec = Math.floor(el.currentTime)
+    if (wholeSec !== audioPosSecRef.current) {
+      audioPosSecRef.current = wholeSec
+      setAudioPos({ t: wholeSec, d: el.duration || 0 })
+    }
+
     // Repeat current ayah: jump back to its start when crossing its end.
     if (repeatAyahRef.current && currentKeyRef.current) {
       const ts = track.timestamps.find((t) => t.verse_key === currentKeyRef.current)
@@ -522,87 +555,97 @@ export default function QuranPage() {
     <div className="page-shell qmr-shell">
       <PageHeader />
       <main>
-        <section className="qmr-hero">
-          <h1>Quran Mushaf</h1>
-          <p>Read the Qurʾān in Uthmani or Indo-Pak script with word-by-word translation, and listen to your choice of reciter — an ayah, a range, or the full Surah.</p>
-        </section>
-
-        <section className="qmr-layout">
-          <aside className="qmr-sidebar">
-            {chaptersError ? (
-              <p className="qmr-status qmr-error">{chaptersError}</p>
-            ) : chapters.length === 0 ? (
-              <p className="qmr-status">Loading Surahs…</p>
-            ) : (
-              <ChapterList chapters={chapters} activeChapter={chapterNumber} onSelect={setChapterNumber} />
-            )}
-          </aside>
-
-          <div className="qmr-reader">
-            <div className="qmr-toolbar" ref={toolbarRef}>
-              <div className="qmr-toolbar-row">
-                <label className="qmr-select">
-                  Translation
-                  <select value={translationId} onChange={(e) => setTranslationId(Number(e.target.value))}>
-                    {translations.map((t) => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
-                    ))}
-                  </select>
-                </label>
-                <ReciterPicker
-                  recitations={recitations}
-                  activeId={recitationId}
-                  onChange={(id) => {
-                    setRecitationId(id)
-                    saveSettings({ recitationChosen: true })
-                  }}
-                  disabled={recitations.length === 0}
-                />
-              </div>
-              <div className="qmr-toolbar-row">
-                <div className="qmr-script-toggle" role="group" aria-label="Arabic script">
-                  <button
-                    type="button"
-                    className={script === 'uthmani' ? 'active' : ''}
-                    onClick={() => setScript('uthmani')}
-                  >
-                    Uthmani
-                  </button>
-                  <button
-                    type="button"
-                    className={script === 'indopak' ? 'active' : ''}
-                    onClick={() => setScript('indopak')}
-                  >
-                    Indo-Pak
-                  </button>
-                </div>
-                <label className="qmr-font-control">
-                  Arabic size
-                  <button type="button" onClick={() => setArabicSize((s) => Math.max(20, s - 2))}>–</button>
-                  <button type="button" onClick={() => setArabicSize((s) => Math.min(48, s + 2))}>+</button>
-                </label>
-                <label className="qmr-font-control">
-                  Translation size
-                  <button type="button" onClick={() => setTranslationSize((s) => Math.max(13, s - 1))}>–</button>
-                  <button type="button" onClick={() => setTranslationSize((s) => Math.min(26, s + 1))}>+</button>
-                </label>
-              </div>
+        {/* ── Sticky surah bar (quran.com-style) ─────────── */}
+        <div className="qmr-subbar" ref={subbarRef}>
+          <div className="qmr-subbar-inner">
+            <button
+              type="button"
+              className="qmr-surah-select"
+              onClick={() => { setPickerOpen((o) => !o); setSettingsOpen(false) }}
+              aria-expanded={pickerOpen}
+            >
+              {activeChapterInfo ? `${activeChapterInfo.id}. ${activeChapterInfo.english_name}` : 'Select Surah'}
+              <span className="qmr-caret" aria-hidden="true">▾</span>
+            </button>
+            <div className="qmr-subbar-right">
+              {activeChapterInfo && (
+                <span className="qmr-subbar-meta">
+                  {activeChapterInfo.revelation_type} · {activeChapterInfo.verse_count} Ayahs
+                </span>
+              )}
+              <button
+                type="button"
+                className="qmr-icon-btn"
+                aria-label="Reader settings"
+                title="Reader settings"
+                onClick={() => { setSettingsOpen((o) => !o); setPickerOpen(false) }}
+              >
+                ⚙
+              </button>
             </div>
+          </div>
+          {pickerOpen && (
+            <div className="qmr-surah-dropdown">
+              {chaptersError ? (
+                <p className="qmr-status qmr-error">{chaptersError}</p>
+              ) : chapters.length === 0 ? (
+                <p className="qmr-status">Loading Surahs…</p>
+              ) : (
+                <ChapterList
+                  chapters={chapters}
+                  activeChapter={chapterNumber}
+                  onSelect={(id) => { setChapterNumber(id); setPickerOpen(false) }}
+                />
+              )}
+            </div>
+          )}
+        </div>
+        {pickerOpen && <div className="qmr-overlay" onClick={() => setPickerOpen(false)} />}
 
-            {activeChapterInfo && (
-              <header className="qmr-surah-header">
-                <h2>
-                  {activeChapterInfo.id}. {activeChapterInfo.english_name}
-                  <span className="qmr-surah-arabic">{activeChapterInfo.name_arabic}</span>
-                </h2>
-                <p>
+        <section className="qmr-reader-page">
+          {/* ── Surah header ──────────────────────────────── */}
+          {activeChapterInfo && (
+            <header className="qmr-surah-head">
+              <button
+                type="button"
+                className="qmr-surah-nav"
+                aria-label="Previous Surah"
+                disabled={chapterNumber <= 1}
+                onClick={() => goToChapter(-1)}
+              >
+                ‹
+              </button>
+              <div className="qmr-surah-head-body">
+                <p className="qmr-surah-head-arabic">{activeChapterInfo.name_arabic}</p>
+                <h1>{activeChapterInfo.id}. Surah {activeChapterInfo.english_name}</h1>
+                <p className="qmr-surah-head-meta">
                   {activeChapterInfo.english_name_translation} · {activeChapterInfo.revelation_type} · {activeChapterInfo.verse_count} Ayahs
                 </p>
-              </header>
-            )}
+                <div className="qmr-surah-head-actions">
+                  <button
+                    type="button"
+                    className="qmr-play-surah"
+                    onClick={playSurahFromStart}
+                    disabled={versesLoading || audioState === 'loading'}
+                  >
+                    {audioState === 'loading' ? '…' : '▶'} Play Surah
+                  </button>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="qmr-surah-nav"
+                aria-label="Next Surah"
+                disabled={chapterNumber >= 114}
+                onClick={() => goToChapter(1)}
+              >
+                ›
+              </button>
+            </header>
+          )}
 
-            {versesLoading && <p className="qmr-status">Loading verses…</p>}
-            {versesError && <p className="qmr-status qmr-error">{versesError}</p>}
+          {versesLoading && <p className="qmr-status">Loading verses…</p>}
+          {versesError && <p className="qmr-status qmr-error">{versesError}</p>}
 
             {!versesLoading && !versesError && verses.length > 0 && (
               <ol className="qmr-ayah-list" style={{ '--qmr-arabic-size': `${arabicSize}px`, '--qmr-translation-size': `${translationSize}px` }}>
@@ -614,12 +657,13 @@ export default function QuranPage() {
                       ref={(el) => registerAyahRef(v.verse_key, el)}
                       className={isActive ? 'qmr-ayah active' : 'qmr-ayah'}
                     >
-                      <div className="qmr-ayah-controls">
-                        <span className="qmr-ayah-badge">{v.verse_number_in_surah}</span>
+                      <div className="qmr-ayah-toprow">
+                        <span className="qmr-ayah-key">{v.verse_key}</span>
                         <button
                           type="button"
                           className="qmr-ayah-play"
                           aria-label={isActive && audioState === 'playing' ? 'Pause ayah' : 'Play ayah'}
+                          title="Play this ayah"
                           onClick={() => {
                             if (isActive && audioState === 'playing') pauseAudio()
                             else if (isActive && audioState === 'paused') resumeAudio()
@@ -650,89 +694,194 @@ export default function QuranPage() {
             {!versesLoading && !versesError && verses.length === 0 && (
               <p className="qmr-status">No verses available for this Surah right now.</p>
             )}
-          </div>
         </section>
       </main>
 
-      {showJumpTop && (
-        <button type="button" className="qmr-jump-top" onClick={jumpToToolbar}>
-          ↑ Settings
-        </button>
+      {/* ── Settings drawer (quran.com-style) ───────────── */}
+      {settingsOpen && (
+        <>
+          <div className="qmr-overlay" onClick={() => setSettingsOpen(false)} />
+          <aside className="qmr-drawer" role="dialog" aria-label="Reader settings">
+            <div className="qmr-drawer-head">
+              <h3>Settings</h3>
+              <button type="button" className="qmr-icon-btn" aria-label="Close settings" onClick={() => setSettingsOpen(false)}>✕</button>
+            </div>
+            <div className="qmr-drawer-body">
+              <div className="qmr-drawer-group">
+                <span className="qmr-drawer-label">Translation</span>
+                <select value={translationId} onChange={(e) => setTranslationId(Number(e.target.value))}>
+                  {translations.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="qmr-drawer-group">
+                <span className="qmr-drawer-label">Reciter</span>
+                <ReciterPicker
+                  recitations={recitations}
+                  activeId={recitationId}
+                  onChange={(id) => {
+                    setRecitationId(id)
+                    saveSettings({ recitationChosen: true })
+                  }}
+                  disabled={recitations.length === 0}
+                />
+              </div>
+
+              <div className="qmr-drawer-group">
+                <span className="qmr-drawer-label">Arabic script</span>
+                <div className="qmr-script-toggle" role="group" aria-label="Arabic script">
+                  <button
+                    type="button"
+                    className={script === 'uthmani' ? 'active' : ''}
+                    onClick={() => setScript('uthmani')}
+                  >
+                    Uthmani
+                  </button>
+                  <button
+                    type="button"
+                    className={script === 'indopak' ? 'active' : ''}
+                    onClick={() => setScript('indopak')}
+                  >
+                    Indo-Pak
+                  </button>
+                </div>
+              </div>
+
+              <div className="qmr-drawer-group qmr-drawer-inline">
+                <span className="qmr-drawer-label">Arabic size</span>
+                <div className="qmr-stepper">
+                  <button type="button" onClick={() => setArabicSize((s) => Math.max(20, s - 2))}>–</button>
+                  <span>{arabicSize}</span>
+                  <button type="button" onClick={() => setArabicSize((s) => Math.min(48, s + 2))}>+</button>
+                </div>
+              </div>
+
+              <div className="qmr-drawer-group qmr-drawer-inline">
+                <span className="qmr-drawer-label">Translation size</span>
+                <div className="qmr-stepper">
+                  <button type="button" onClick={() => setTranslationSize((s) => Math.max(13, s - 1))}>–</button>
+                  <span>{translationSize}</span>
+                  <button type="button" onClick={() => setTranslationSize((s) => Math.min(26, s + 1))}>+</button>
+                </div>
+              </div>
+
+              <div className="qmr-drawer-group">
+                <span className="qmr-drawer-label">Play a range of ayahs</span>
+                <div className="qmr-range" aria-label="Play a range of ayahs">
+                  <input
+                    type="number"
+                    min={1}
+                    max={verseCount}
+                    value={rangeFrom}
+                    onChange={(e) => setRangeFrom(Number(e.target.value))}
+                    aria-label="From ayah"
+                  />
+                  <span>–</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={verseCount}
+                    value={rangeTo}
+                    onChange={(e) => setRangeTo(Number(e.target.value))}
+                    aria-label="To ayah"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { playRange(); setSettingsOpen(false) }}
+                    disabled={versesLoading || audioState === 'loading'}
+                  >
+                    ▶ Play
+                  </button>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </>
       )}
 
-      <div className="qmr-audio-bar">
-        {audioErrorMsg && <span className="qmr-audio-error">{audioErrorMsg}</span>}
-        <div className="qmr-audio-controls">
-          <button type="button" onClick={() => goToOffset(-1)} disabled={!audioMode} aria-label="Previous ayah">⏮</button>
-          {audioState === 'playing' ? (
-            <button type="button" className="qmr-audio-main" onClick={pauseAudio} aria-label="Pause">⏸</button>
-          ) : audioState === 'paused' ? (
-            <button type="button" className="qmr-audio-main" onClick={resumeAudio} aria-label="Resume">▶</button>
-          ) : (
-            <button type="button" className="qmr-audio-main" onClick={playSurahFromStart} disabled={versesLoading || audioState === 'loading'} aria-label="Play Surah">
-              {audioState === 'loading' ? '…' : '▶'}
-            </button>
-          )}
-          <button type="button" onClick={() => goToOffset(1)} disabled={!audioMode} aria-label="Next ayah">⏭</button>
-          <button type="button" onClick={stopAudio} disabled={audioState === 'idle'} aria-label="Stop">⏹</button>
-        </div>
-        <div className="qmr-range" aria-label="Play a range of ayahs">
-          <span>Ayah</span>
+      {/* ── Slim audio player (appears while playing) ───── */}
+      {audioState !== 'idle' && (
+        <div className="qmr-player">
           <input
-            type="number"
-            min={1}
-            max={verseCount}
-            value={rangeFrom}
-            onChange={(e) => setRangeFrom(Number(e.target.value))}
-            aria-label="From ayah"
+            type="range"
+            className="qmr-player-seek"
+            min={0}
+            max={Math.max(1, Math.floor(audioPos.d))}
+            value={Math.min(audioPos.t, Math.floor(audioPos.d) || 0)}
+            onChange={(e) => seekTo(Number(e.target.value))}
+            aria-label="Seek"
+            style={{ '--qmr-seek-fill': `${audioPos.d ? (audioPos.t / audioPos.d) * 100 : 0}%` }}
           />
-          <span>–</span>
-          <input
-            type="number"
-            min={1}
-            max={verseCount}
-            value={rangeTo}
-            onChange={(e) => setRangeTo(Number(e.target.value))}
-            aria-label="To ayah"
-          />
-          <button type="button" onClick={playRange} disabled={versesLoading || audioState === 'loading'}>
-            ▶ Range
-          </button>
+          <div className="qmr-player-row">
+            <span className="qmr-player-time">{formatTime(audioPos.t)}</span>
+            <div className="qmr-player-controls">
+              <div className="qmr-player-menu-wrap">
+                <button
+                  type="button"
+                  className="qmr-player-btn"
+                  aria-label="Playback options"
+                  aria-expanded={playerMenuOpen}
+                  onClick={() => setPlayerMenuOpen((o) => !o)}
+                >
+                  ⋯
+                </button>
+                {playerMenuOpen && (
+                  <div className="qmr-player-menu">
+                    <label>
+                      <input type="checkbox" checked={repeatAyah} onChange={(e) => setRepeatAyah(e.target.checked)} />
+                      Repeat ayah
+                    </label>
+                    <label>
+                      <input type="checkbox" checked={loopEnabled} onChange={(e) => setLoopEnabled(e.target.checked)} />
+                      Loop
+                    </label>
+                    <label className="qmr-player-menu-row">
+                      Speed
+                      <select value={playbackRate} onChange={(e) => setPlaybackRate(Number(e.target.value))}>
+                        <option value={0.75}>0.75×</option>
+                        <option value={1}>1×</option>
+                        <option value={1.25}>1.25×</option>
+                        <option value={1.5}>1.5×</option>
+                      </select>
+                    </label>
+                    <label className="qmr-player-menu-row qmr-player-volume">
+                      Volume
+                      <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => setVolume(Number(e.target.value))} />
+                    </label>
+                  </div>
+                )}
+              </div>
+              <button type="button" className="qmr-player-btn" onClick={() => goToOffset(-1)} disabled={!audioMode} aria-label="Previous ayah">⏮</button>
+              {audioState === 'playing' ? (
+                <button type="button" className="qmr-player-btn qmr-player-main" onClick={pauseAudio} aria-label="Pause">⏸</button>
+              ) : (
+                <button type="button" className="qmr-player-btn qmr-player-main" onClick={resumeAudio} aria-label="Resume">▶</button>
+              )}
+              <button type="button" className="qmr-player-btn" onClick={() => goToOffset(1)} disabled={!audioMode} aria-label="Next ayah">⏭</button>
+              <button type="button" className="qmr-player-btn" onClick={stopAudio} aria-label="Stop and close player">✕</button>
+            </div>
+            <span className="qmr-player-time qmr-player-time-right">
+              {currentAyahKey ? `${currentAyahKey} · ` : ''}{formatTime(audioPos.d)}
+            </span>
+          </div>
+          {audioErrorMsg && <p className="qmr-player-error">{audioErrorMsg}</p>}
         </div>
-        <div className="qmr-audio-meta">
-          {currentAyahKey ? <span>Ayah {currentAyahKey}</span> : <span>Play Surah, a range, or tap an ayah</span>}
+      )}
+      {audioErrorMsg && audioState === 'idle' && (
+        <div className="qmr-player qmr-player-error-only">
+          <p className="qmr-player-error">{audioErrorMsg}</p>
         </div>
-        <div className="qmr-audio-toggles">
-          <label>
-            <input type="checkbox" checked={repeatAyah} onChange={(e) => setRepeatAyah(e.target.checked)} />
-            Repeat ayah
-          </label>
-          <label>
-            <input type="checkbox" checked={loopEnabled} onChange={(e) => setLoopEnabled(e.target.checked)} />
-            Loop
-          </label>
-          <label className="qmr-speed">
-            Speed
-            <select value={playbackRate} onChange={(e) => setPlaybackRate(Number(e.target.value))}>
-              <option value={0.75}>0.75×</option>
-              <option value={1}>1×</option>
-              <option value={1.25}>1.25×</option>
-              <option value={1.5}>1.5×</option>
-            </select>
-          </label>
-          <label className="qmr-volume">
-            Vol
-            <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => setVolume(Number(e.target.value))} />
-          </label>
-        </div>
-        <audio
-          ref={audioRef}
-          preload="auto"
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={handleEnded}
-          onError={() => setAudioErrorMsg('This audio file failed to load.')}
-        />
-      </div>
+      )}
+
+      <audio
+        ref={audioRef}
+        preload="auto"
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={handleEnded}
+        onError={() => setAudioErrorMsg('This audio file failed to load.')}
+      />
 
       <PageFooter />
     </div>
