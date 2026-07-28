@@ -231,6 +231,71 @@ const registerLimiter = rateLimit({
 
 // ── Auth routes ──────────────────────────────────────────
 
+// Google Sign-In: the client-side button produces an ID token; we verify it
+// and sign the user in (creating the account on first sign-in). Feature-
+// flagged on GOOGLE_CLIENT_ID.
+const { OAuth2Client } = require('google-auth-library')
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || ''
+const googleAuthClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null
+
+app.get('/api/auth/config', (req, res) => {
+  res.json({ google_client_id: GOOGLE_CLIENT_ID || null })
+})
+
+app.post('/api/auth/google', loginLimiter, async (req, res) => {
+  if (!googleAuthClient) {
+    return res.status(501).json({ error: 'Google sign-in is not configured on this server.' })
+  }
+  const { credential } = req.body
+  if (!credential) return res.status(400).json({ error: 'Missing Google credential.' })
+  try {
+    const ticket = await googleAuthClient.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID,
+    })
+    const payload = ticket.getPayload()
+    if (!payload?.email || !payload.email_verified) {
+      return res.status(401).json({ error: 'Your Google account email is not verified.' })
+    }
+    const email = normalizeEmail(payload.email)
+
+    const [rows] = await pool.query('SELECT * FROM auth_users WHERE email = ?', [email])
+    let user
+    if (rows.length > 0) {
+      user = rows[0]
+    } else {
+      const first = (payload.given_name || '').trim()
+      const last = (payload.family_name || '').trim()
+      const name = (payload.name || `${first} ${last}`).trim() || email.split('@')[0]
+
+      // Unique username from the email's local part.
+      let base = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_.]/g, '').slice(0, 24)
+      if (base.length < 3) base = `student${base}`
+      let username = base
+      for (let attempt = 0; attempt < 20; attempt++) {
+        const [taken] = await pool.query('SELECT id FROM auth_users WHERE username = ?', [username])
+        if (taken.length === 0) break
+        username = `${base}${crypto.randomInt(1000, 9999)}`
+      }
+
+      // Random password so the account has one; they can set a real password
+      // any time via the forgot-password flow.
+      const password_hash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12)
+      const [result] = await pool.query(
+        'INSERT INTO auth_users (name, username, first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?, ?, ?)',
+        [name, username, first || '', last || '', email, password_hash]
+      )
+      user = { id: result.insertId, email, name, username, role: 'user' }
+    }
+
+    setAuthCookie(res, user)
+    res.json(userResponse(user))
+  } catch (err) {
+    console.error('google auth error', err.message)
+    res.status(401).json({ error: 'Google sign-in failed. Please try again.' })
+  }
+})
+
 app.post('/api/auth/register', registerLimiter, async (req, res) => {
   const { first_name, last_name, username, email, password, password_confirmation } = req.body
 

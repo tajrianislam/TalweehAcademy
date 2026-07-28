@@ -13,6 +13,85 @@ const EMPTY_FORM = {
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_.]{3,30}$/
 
+// Fetched once per session; null until known, '' when not configured.
+let cachedGoogleClientId
+async function getGoogleClientId() {
+  if (cachedGoogleClientId !== undefined) return cachedGoogleClientId
+  try {
+    const res = await fetch('/api/auth/config')
+    const data = res.ok ? await res.json() : {}
+    cachedGoogleClientId = data.google_client_id || ''
+  } catch {
+    cachedGoogleClientId = ''
+  }
+  return cachedGoogleClientId
+}
+
+let gsiScriptPromise
+function loadGsiScript() {
+  if (window.google?.accounts?.id) return Promise.resolve()
+  if (!gsiScriptPromise) {
+    gsiScriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = 'https://accounts.google.com/gsi/client'
+      script.async = true
+      script.onload = resolve
+      script.onerror = () => { gsiScriptPromise = undefined; reject(new Error('Failed to load Google sign-in')) }
+      document.head.appendChild(script)
+    })
+  }
+  return gsiScriptPromise
+}
+
+// Renders the official "Sign in with Google" button when the server has a
+// GOOGLE_CLIENT_ID configured; renders nothing otherwise.
+function GoogleSignInButton({ onError, onDone }) {
+  const { googleLogin } = useAuth()
+  const buttonRef = useRef(null)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const clientId = await getGoogleClientId()
+      if (!clientId || cancelled) return
+      try {
+        await loadGsiScript()
+      } catch {
+        return
+      }
+      if (cancelled || !buttonRef.current) return
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response) => {
+          try {
+            await googleLogin(response.credential)
+            onDone()
+          } catch (err) {
+            onError(err.message)
+          }
+        },
+      })
+      window.google.accounts.id.renderButton(buttonRef.current, {
+        theme: 'outline',
+        size: 'large',
+        width: 320,
+        text: 'continue_with',
+      })
+      setReady(true)
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <div className={`google-signin${ready ? '' : ' google-signin-hidden'}`}>
+      <div className="google-signin-divider"><span>or</span></div>
+      <div className="google-signin-btn" ref={buttonRef} />
+    </div>
+  )
+}
+
 export default function AuthModal({ open, initialTab = 'login', onClose }) {
   const { login, register, requestPasswordReset } = useAuth()
   const [tab, setTab] = useState(initialTab)
@@ -307,6 +386,8 @@ export default function AuthModal({ open, initialTab = 'login', onClose }) {
                 {submitting ? 'Please wait…' : tab === 'login' ? 'Login' : 'Create Account'}
               </button>
             </form>
+
+            <GoogleSignInButton onError={setError} onDone={onClose} />
 
             <p className="modal-switch">
               {tab === 'login' ? (

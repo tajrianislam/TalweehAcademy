@@ -50,6 +50,19 @@ export function AuthProvider({ children }) {
     return data
   }
 
+  async function googleLogin(credential) {
+    const res = await fetch('/api/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ credential }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Google sign-in failed')
+    setUser(data)
+    return data
+  }
+
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
     setUser(null)
@@ -78,7 +91,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, modal, openAuthModal, closeAuthModal, login, register, logout, requestPasswordReset, resetPassword }}>
+    <AuthContext.Provider value={{ user, loading, modal, openAuthModal, closeAuthModal, login, register, googleLogin, logout, requestPasswordReset, resetPassword }}>
       {children}
     </AuthContext.Provider>
   )

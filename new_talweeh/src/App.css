@@ -3014,6 +3014,33 @@ span.hl-icon {
   opacity: 0.6;
   pointer-events: none;
 }
+
+/* ── Google sign-in (auth modal) ─────────────────────────── */
+.google-signin-hidden {
+  display: none;
+}
+
+.google-signin-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.google-signin-divider::before,
+.google-signin-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8e0;
+}
+
+.google-signin-btn {
+  display: flex;
+  justify-content: center;
+}
 .lesson-tab-heading span {
   color: #999;
   font-size: 0.78rem;
