@@ -5191,10 +5191,11 @@ button.aqb-opt-label:hover {
   border-bottom: 1px solid #eef2ee;
   margin-bottom: 1.25rem;
   /* Stays pinned while scrolling a long Surah so the translation/reciter
-     controls are always within reach. */
+     controls are always within reach. Sticks just below the sticky site
+     header — --qmr-sticky-top is measured from the header in quran.jsx. */
   position: sticky;
-  top: 0;
-  z-index: 30;
+  top: var(--qmr-sticky-top, 0px);
+  z-index: 10;
   background: #fff;
 }
 

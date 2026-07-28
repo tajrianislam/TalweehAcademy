@@ -163,6 +163,7 @@ export default function QuranPage() {
   const [rangeTo, setRangeTo] = useState(1)
 
   const audioRef = useRef(null)
+  const shellRef = useRef(null)
   const ayahRefs = useRef(new Map())
   // Gapless track for the current chapter+reciter: one MP3 for the whole
   // Surah plus per-ayah millisecond timestamps. No per-verse file swaps.
@@ -180,6 +181,19 @@ export default function QuranPage() {
 
   const activeChapterInfo = chapters.find((c) => c.id === chapterNumber)
   const verseCount = activeChapterInfo?.verse_count || 1
+
+  // The site header is sticky, so the reader toolbar must stick below it.
+  // Track the header's height (it shrinks when the promo bar is dismissed).
+  useEffect(() => {
+    const shell = shellRef.current
+    const header = document.querySelector('.site-header')
+    if (!shell || !header) return
+    const apply = () => shell.style.setProperty('--qmr-sticky-top', `${header.offsetHeight}px`)
+    apply()
+    const observer = new ResizeObserver(apply)
+    observer.observe(header)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     fetch('/api/quran/chapters')
@@ -499,7 +513,7 @@ export default function QuranPage() {
   }
 
   return (
-    <div className="page-shell qmr-shell">
+    <div className="page-shell qmr-shell" ref={shellRef}>
       <PageHeader />
       <main>
         <section className="qmr-hero">
