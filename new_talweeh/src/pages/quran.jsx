@@ -163,7 +163,8 @@ export default function QuranPage() {
   const [rangeTo, setRangeTo] = useState(1)
 
   const audioRef = useRef(null)
-  const shellRef = useRef(null)
+  const toolbarRef = useRef(null)
+  const [showJumpTop, setShowJumpTop] = useState(false)
   const ayahRefs = useRef(new Map())
   // Gapless track for the current chapter+reciter: one MP3 for the whole
   // Surah plus per-ayah millisecond timestamps. No per-verse file swaps.
@@ -182,18 +183,23 @@ export default function QuranPage() {
   const activeChapterInfo = chapters.find((c) => c.id === chapterNumber)
   const verseCount = activeChapterInfo?.verse_count || 1
 
-  // The site header is sticky, so the reader toolbar must stick below it.
-  // Track the header's height (it shrinks when the promo bar is dismissed).
+  // Show a floating "back to settings" shortcut once the toolbar has
+  // scrolled out of view, so the translation/reciter controls are reachable
+  // from deep inside a long Surah.
   useEffect(() => {
-    const shell = shellRef.current
-    const header = document.querySelector('.site-header')
-    if (!shell || !header) return
-    const apply = () => shell.style.setProperty('--qmr-sticky-top', `${header.offsetHeight}px`)
-    apply()
-    const observer = new ResizeObserver(apply)
-    observer.observe(header)
-    return () => observer.disconnect()
+    function onScroll() {
+      const toolbar = toolbarRef.current
+      if (!toolbar) return
+      setShowJumpTop(toolbar.getBoundingClientRect().bottom < 0)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  function jumpToToolbar() {
+    toolbarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
 
   useEffect(() => {
     fetch('/api/quran/chapters')
@@ -513,7 +519,7 @@ export default function QuranPage() {
   }
 
   return (
-    <div className="page-shell qmr-shell" ref={shellRef}>
+    <div className="page-shell qmr-shell">
       <PageHeader />
       <main>
         <section className="qmr-hero">
@@ -533,7 +539,7 @@ export default function QuranPage() {
           </aside>
 
           <div className="qmr-reader">
-            <div className="qmr-toolbar">
+            <div className="qmr-toolbar" ref={toolbarRef}>
               <div className="qmr-toolbar-row">
                 <label className="qmr-select">
                   Translation
@@ -647,6 +653,12 @@ export default function QuranPage() {
           </div>
         </section>
       </main>
+
+      {showJumpTop && (
+        <button type="button" className="qmr-jump-top" onClick={jumpToToolbar}>
+          ↑ Settings
+        </button>
+      )}
 
       <div className="qmr-audio-bar">
         {audioErrorMsg && <span className="qmr-audio-error">{audioErrorMsg}</span>}

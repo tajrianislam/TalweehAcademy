@@ -5187,17 +5187,35 @@ button.aqb-opt-label:hover {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 0.75rem 0 1rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid #eef2ee;
   margin-bottom: 1.25rem;
-  /* Stays pinned while scrolling a long Surah so the translation/reciter
-     controls are always within reach. Sticks just below the sticky site
-     header — --qmr-sticky-top is measured from the header in quran.jsx. */
-  position: sticky;
-  top: var(--qmr-sticky-top, 0px);
-  z-index: 10;
-  background: #fff;
 }
+
+/* Floating shortcut back to the translation/reciter controls, shown once the
+   toolbar has scrolled out of view. Sits above the fixed audio bar. */
+.qmr-jump-top {
+  position: fixed;
+  right: 18px;
+  bottom: 120px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(30, 48, 34, 0.3);
+  transition: background 150ms ease;
+}
+
+.qmr-jump-top:hover { background: var(--green-dark); }
 
 .qmr-toolbar-row {
   display: flex;
