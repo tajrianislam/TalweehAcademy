@@ -8,6 +8,7 @@ import { Editable } from '../components/ContentEditor'
 
 const navLinks = [
   { label: 'Courses', to: '/courses' },
+  { label: 'Arabic', to: '/arabic' },
   { label: 'Services', to: '/services' },
   { label: 'Quran', to: '/quran' },
   { label: 'Articles', to: '/articles' },

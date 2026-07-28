@@ -22,6 +22,7 @@ import ResetPasswordPage from './pages/reset-password'
 import GenericPage from './pages/page'
 import DashboardPage from './pages/dashboard'
 import QuranPage from './pages/quran'
+import ArabicPage from './pages/arabic'
 import CheckoutSuccessPage from './pages/checkout-success'
 import MembershipPage from './pages/membership'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -408,6 +409,7 @@ function AppInner() {
         <Route path="/courses/:slug/lesson/:lessonId/quiz" element={<LessonQuizPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/quran" element={<QuranPage />} />
+        <Route path="/arabic" element={<ArabicPage />} />
         <Route path="/membership" element={<MembershipPage />} />
         <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
         <Route path="/p/:slug" element={<GenericPage />} />

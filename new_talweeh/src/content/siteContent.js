@@ -89,8 +89,8 @@ export const CONTENT_REGISTRY = {
         ],
       },
       default: [
-        { title: 'Arabic Program', text: 'A step by step 2 year program to learn the Arabic language.', href: '/courses' },
-        { title: 'Talweeh Society', text: 'Get access to our free courses and weekly lessons.', href: '/membership' },
+        { title: 'Arabic Program', text: 'A step by step 2 year program to learn the Arabic language.', href: '/arabic' },
+        { title: 'Talweeh Society', text: 'Get access to our free courses and weekly lessons.', href: 'https://t.me/TalweehAcademy' },
         { title: 'Authorized Instructors', text: 'Qualified instructors navigating your path.', href: '/instructors' },
       ],
     },

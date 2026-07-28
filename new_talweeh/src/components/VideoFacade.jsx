@@ -5,7 +5,7 @@ import { extractVideoId } from '../utils/youtube'
 // Lightweight YouTube facade: shows the video thumbnail with our own green
 // play button (no red YouTube branding) and only loads the real iframe once
 // the visitor clicks play.
-export default function VideoFacade({ src, title }) {
+export default function VideoFacade({ src, title, thumbnail }) {
   const [playing, setPlaying] = useState(false)
   const videoId = extractVideoId(src)
 
@@ -32,7 +32,7 @@ export default function VideoFacade({ src, title }) {
       aria-label={`Play: ${title}`}
     >
       <img
-        src={`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`}
+        src={thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`}
         alt=""
         loading="lazy"
       />
