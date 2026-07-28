@@ -783,6 +783,12 @@ span.hl-icon {
   font-weight: 600;
 }
 
+/* Eight links + the journey button need tighter spacing on smaller desktops. */
+@media (max-width: 1400px) {
+  .nav-links { gap: 22px; font-size: 16px; }
+  .main-nav { gap: 20px; }
+}
+
 .nav-links a {
   transition: color 180ms ease;
 }
@@ -6057,6 +6063,262 @@ button.aqb-opt-label:hover {
 
 @media (max-width: 420px) {
   .arb-testimonial-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Arabic sub-pages: program / FAQ / about ─────────────── */
+.arb-hero-compact { padding-bottom: 34px; }
+
+.arb-hero-sub {
+  margin: -8px auto 0;
+  max-width: 560px;
+  color: #5a6a5e;
+  font-size: 15.5px;
+}
+
+.arb-subnav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 22px;
+}
+
+.arb-subnav a {
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #4a5a4e;
+  border: 1px solid transparent;
+}
+
+.arb-subnav a:hover { border-color: #d9e2d8; }
+
+.arb-subnav a.active {
+  background: #fff;
+  border-color: var(--green);
+  color: var(--green-dark);
+}
+
+/* Program facts strip */
+.arb-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 34px 24px 6px;
+}
+
+.arb-fact {
+  background: #fff;
+  border: 1px solid #e7ece6;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.arb-fact span {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.arb-fact strong {
+  color: #1f2a23;
+  font-size: 14.5px;
+  line-height: 1.35;
+}
+
+/* Accordion */
+.arb-panel-left { text-align: left; }
+
+.arb-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.arb-accordion-item {
+  background: #fff;
+  border: 1px solid #e7ece6;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.arb-accordion-item.open { border-color: #cadcca; }
+
+.arb-accordion-item > button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 15px 18px;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2a23;
+  text-align: left;
+  cursor: pointer;
+}
+
+.arb-accordion-item.open > button { color: var(--green-dark); }
+
+.arb-accordion-caret {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--green-soft, #effdf2);
+  color: var(--green-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.arb-accordion-item > p {
+  margin: 0;
+  padding: 0 18px 16px;
+  color: #35453b;
+  line-height: 1.7;
+}
+
+/* Module texts list */
+.arb-module-texts {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  background: var(--green-soft, #effdf2);
+  border-radius: 10px;
+}
+
+.arb-module-texts-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--green-dark);
+  margin-bottom: 6px;
+}
+
+.arb-module-texts ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #2c3c32;
+  line-height: 1.6;
+  font-size: 14.5px;
+}
+
+/* Invitation band + buttons */
+.arb-invite-actions { margin-top: 22px; margin-bottom: 0; }
+
+.arb-btn-invert {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 26px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--green-dark);
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.arb-btn-invert:hover { background: #eef5ee; }
+
+.arb-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.arb-btn-ghost:hover { background: rgba(255, 255, 255, 0.12); }
+
+.arb-justify { text-align: left; }
+
+.arb-divider-spaced { margin-top: 34px; }
+
+/* About sections */
+.arb-about-section {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 44px 24px 10px;
+  text-align: center;
+}
+
+.arb-about-section h2 {
+  margin: 0 0 10px;
+  font-family: 'Talweeh Cinzel', Georgia, serif;
+  color: var(--green-dark);
+  font-size: clamp(1.3rem, 2.6vw, 1.7rem);
+}
+
+.arb-about-section p {
+  margin: 14px auto 0;
+  color: #35453b;
+  line-height: 1.75;
+  text-align: left;
+}
+
+/* Proud cards */
+.arb-proud-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 26px;
+}
+
+.arb-proud-card {
+  display: block;
+  background: #fff;
+  border: 1px solid #e7ece6;
+  border-radius: 14px;
+  padding: 22px 18px;
+  text-align: center;
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.arb-proud-card:hover {
+  border-color: var(--green);
+  box-shadow: 0 10px 26px rgba(36, 63, 43, 0.1);
+}
+
+.arb-proud-card h3 {
+  margin: 0 0 8px;
+  font-family: 'Talweeh Cinzel', Georgia, serif;
+  font-size: 1.02rem;
+  color: var(--green-dark);
+}
+
+.arb-proud-card p {
+  margin: 0;
+  color: #4a5a4e;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+@media (max-width: 860px) {
+  .arb-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .arb-proud-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 480px) {
+  .arb-facts { grid-template-columns: 1fr; padding-top: 24px; }
+  .arb-proud-grid { grid-template-columns: 1fr; }
 }
 
 /* ── In-place content editor (admin edit mode) ─────────────── */

@@ -23,6 +23,9 @@ import GenericPage from './pages/page'
 import DashboardPage from './pages/dashboard'
 import QuranPage from './pages/quran'
 import ArabicPage from './pages/arabic'
+import ArabicProgramPage from './pages/arabic-program'
+import ArabicFaqPage from './pages/arabic-faq'
+import ArabicAboutPage from './pages/arabic-about'
 import CheckoutSuccessPage from './pages/checkout-success'
 import MembershipPage from './pages/membership'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -422,6 +425,9 @@ function AppInner() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/quran" element={<QuranPage />} />
         <Route path="/arabic" element={<ArabicPage />} />
+        <Route path="/arabic/program" element={<ArabicProgramPage />} />
+        <Route path="/arabic/faq" element={<ArabicFaqPage />} />
+        <Route path="/arabic/about" element={<ArabicAboutPage />} />
         <Route path="/membership" element={<MembershipPage />} />
         <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
         <Route path="/p/:slug" element={<GenericPage />} />

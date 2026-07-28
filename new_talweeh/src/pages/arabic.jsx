@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { PageHeader, PageFooter } from './_shared'
 import VideoFacade from '../components/VideoFacade'
 import { ASSET } from '../constants/assets'
@@ -65,9 +65,15 @@ export default function ArabicPage() {
           <img className="arb-hero-bismillah" src={`${TA}/2025/12/bismilla-e1755384561119-300.webp`} alt="" />
           <h1>Unlock the Language of the Qur’an Beyond Translation</h1>
           <div className="arb-hero-actions">
-            <a className="arb-btn-primary" href="#curriculum">Explore Arabic Program</a>
+            <Link className="arb-btn-primary" to="/arabic/program">Explore Arabic Program</Link>
             <a className="arb-btn-secondary" href={MEMBERSHIP_URL} target="_blank" rel="noreferrer">Become a Member</a>
           </div>
+          <nav className="arb-subnav" aria-label="Arabic program pages">
+            <NavLink to="/arabic" end>Overview</NavLink>
+            <NavLink to="/arabic/program">Full Program</NavLink>
+            <NavLink to="/arabic/faq">FAQs</NavLink>
+            <NavLink to="/arabic/about">About</NavLink>
+          </nav>
           <div className="arb-welcome-video">
             <VideoFacade src={WELCOME_VIDEO.src} title="Welcome to Talweeh Arabic" thumbnail={WELCOME_VIDEO.thumbnail} />
           </div>
@@ -111,7 +117,7 @@ export default function ArabicPage() {
               </div>
             </div>
             <p>{current.text}</p>
-            <a className="arb-btn-outline" href={PROGRAM_URL} target="_blank" rel="noreferrer">Learn More</a>
+            <Link className="arb-btn-outline" to="/arabic/program">Learn More</Link>
           </div>
         </section>
 
